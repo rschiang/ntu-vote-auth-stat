@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NTU Vote Auth Stat</title>
+    <meta charset='utf-8'>
+    <link rel='stylesheet' href='bower_components/foundation/css/foundation.css'>
+    <script src='bower_components/chartjs/Chart.min.js'></script>
+    <script src='index.js'></script>
+</head>
+<body>
+    <div class='row'>
+        <div class='large-12 columns'>
+            <h1>領票統計</h1>
+            <dl class="sub-nav">
+                <dt>檢視：</dt>
+                <dd><a href="index.html">累積圖</a></dd>
+                <dd class="active"><a href="by_time.html">分時段</a></dd>
+                <dd><a href="#">分學院</a></dd>
+            </dl>
+            <canvas id='chart1' width='960px' height='640px'></canvas>
+            <p>統計數據僅供參考；時間點以無條件捨去至最接近的半小時為依據。</p>
+        </div>
+    </div>
+    <script>
+        var labels = []; for (var i = 17; i < 39; i++)
+        labels.push(Math.floor((i >= 26 ? i - 24 : i) / 2) + (i % 2 == 0 ? '' : ':30') + (i >= 24 ? 'pm' : 'am'));
+
+        var raw_data = {
+            '水源校區': [0, 1, 3, 4, 2, 0, 10, 8, 4, 12, 6, 2, 1, 1, 4, 2, 1, 3, 2, 3, 4, 0],
+            '二活': [0, 9, 2, 10, 1, 12, 5, 19, 3, 20, 9, 14, 7, 12, 7, 11, 6, 17, 19, 12, 5, 0],
+            '共同': [0, 10, 4, 8, 3, 10, 4, 29, 12, 26, 14, 17, 1, 36, 9, 9, 9, 8, 11, 6, 5, 0],
+            '男一舍': [0, 6, 2, 3, 4, 1, 4, 15, 19, 15, 17, 4, 5, 7, 10, 10, 9, 7, 8, 14, 4, 0],
+            '活大': [0, 8, 7, 5, 7, 4, 13, 19, 20, 20, 19, 6, 13, 11, 8, 4, 8, 7, 19, 18, 13, 1],
+            '新社科院': [1, 6, 5, 8, 2, 0, 0, 18, 18, 28, 14, 13, 9, 15, 8, 13, 9, 10, 9, 2, 5, 0],
+            '新生': [0, 11, 8, 30, 5, 12, 4, 18, 8, 6, 7, 6, 8, 8, 7, 5, 3, 2, 4, 2, 3, 0],
+            '普通': [0, 2, 5, 15, 2, 26, 2, 28, 12, 8, 10, 17, 13, 17, 8, 9, 4, 11, 18, 6, 1, 0],
+            '公衛大樓': [0, 3, 5, 5, 1, 1, 2, 6, 5, 0, 2, 1, 2, 1, 2, 0, 2, 2, 1, 4, 0, 0],
+            '醫學院': [0, 3, 12, 2, 2, 17, 6, 13, 10, 16, 5, 2, 2, 5, 7, 6, 3, 11, 9, 1, 6, 0],
+        }
+
+        var context = document.getElementById('chart1').getContext('2d');
+        var chart1 = new Chart(context).Line({ labels: labels, datasets: generate_dataset(raw_data) }, { multiTooltipTemplate: "<%if (datasetLabel) {%><%=datasetLabel%>: <%}%><%= value %>" });
+    </script>
+</body>
+</html>
