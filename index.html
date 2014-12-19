@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NTU Vote Auth Stat</title>
+    <meta charset='utf-8'>
+    <link rel='stylesheet' href='bower_components/foundation/css/foundation.css'>
+    <script src='bower_components/chartjs/Chart.min.js'></script>
+    <style type="text/css">
+        #legend1 span {
+            display: inline-block;
+            width: 1em; height: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div class='row'>
+        <div class='large-12 columns'>
+            <h1>領票統計</h1>
+            <canvas id='chart1' width='960px' height='640px'></canvas>
+            <div id='legend1'></div>
+        </div>
+    </div>
+    <script>
+        var context = document.getElementById('chart1').getContext('2d');
+        var data = {
+            labels: ['8am', '9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm'],
+            datasets:[
+                {
+                    label: '文學院',
+                    fillColor: 'rgba(244,67,54,0.2)',
+                    strokeColor: 'rgba(244,67,54,1)',
+                    pointColor: 'rgba(244,67,54,1)',
+                    pointStrokeColor: '#fff',
+                    pointHighlightFill: '#fff',
+                    pointHighlightStroke: 'rgba(244,67,54,1)',
+                    data: [0, 0, 10, 12, 18, 28, 42, 21, 25, 15, 36, 0],
+                },
+                {
+                    label: '理學院',
+                    fillColor: 'rgba(233,30,99,0.2)',
+                    strokeColor: 'rgba(233,30,99,1)',
+                    pointColor: 'rgba(233,30,99,1)',
+                    pointStrokeColor: '#fff',
+                    pointHighlightFill: '#fff',
+                    pointHighlightStroke: 'rgba(233,30,99,1)',
+                    data: [0, 0, 9, 2, 6, 17, 8, 4, 5, 6, 7, 0],
+                },
+                {
+                    label: '社會科學院',
+                    fillColor: 'rgba(156,39,176,0.2)',
+                    strokeColor: 'rgba(156,39,176,1)',
+                    pointColor: 'rgba(156,39,176,1)',
+                    pointStrokeColor: '#fff',
+                    pointHighlightFill: '#fff',
+                    pointHighlightStroke: 'rgba(156,39,176,1)',
+                    data: [0, 1, 15, 12, 13, 49, 43, 27, 45, 23, 20, 0],
+                },
+                {
+                    label: '醫學院',
+                    fillColor: 'rgba(103,58,183,0.2)',
+                    strokeColor: 'rgba(103,58,183,1)',
+                    pointColor: 'rgba(103,58,183,1)',
+                    pointStrokeColor: '#fff',
+                    pointHighlightFill: '#fff',
+                    pointHighlightStroke: 'rgba(103,58,183,1)',
+                    data: [0, 0, 18, 39, 36, 25, 19, 5, 15, 13, 23, 0],
+                },
+                {
+                    label: '工學院',
+                    fillColor: 'rgba(63,81,181,0.2)',
+                    strokeColor: 'rgba(63,81,181,1)',
+                    pointColor: 'rgba(63,81,181,1)',
+                    pointStrokeColor: '#fff',
+                    pointHighlightFill: '#fff',
+                    pointHighlightStroke: 'rgba(63,81,181,1)',
+                    data: [0, 0, 15, 6, 10, 40, 34, 15, 9, 12, 13, 0],
+                },
+                {
+                    label: '生物資源暨農學院',
+                    fillColor: 'rgba(33,150,143,0.2)',
+                    strokeColor: 'rgba(33,150,143,1)',
+                    pointColor: 'rgba(33,150,143,1)',
+                    pointStrokeColor: '#fff',
+                    pointHighlightFill: '#fff',
+                    pointHighlightStroke: 'rgba(33,150,143,1)',
+                    data: [0, 0, 13, 14, 13, 42, 19, 14, 21, 12, 16, 0],
+                },
+                {
+                    label: '管理學院',
+                    fillColor: 'rgba(0,188,212,0.2)',
+                    strokeColor: 'rgba(0,188,212,1)',
+                    pointColor: 'rgba(0,188,212,1)',
+                    pointStrokeColor: '#fff',
+                    pointHighlightFill: '#fff',
+                    pointHighlightStroke: 'rgba(0,188,212,1)',
+                    data: [0, 0, 14, 9, 20, 30, 39, 24, 22, 20, 23, 0],
+                },
+                {
+                    label: '公共衛生學院',
+                    fillColor: 'rgba(0,150,136,0.2)',
+                    strokeColor: 'rgba(0,150,136,1)',
+                    pointColor: 'rgba(0,150,136,1)',
+                    pointStrokeColor: '#fff',
+                    pointHighlightFill: '#fff',
+                    pointHighlightStroke: 'rgba(0,150,136,1)',
+                    data: [0, 0, 7, 10, 5, 19, 4, 4, 5, 1, 5, 0],
+                },
+                {
+                    label: '電機資訊學院',
+                    fillColor: 'rgba(76,175,80,0.2)',
+                    strokeColor: 'rgba(76,175,80,1)',
+                    pointColor: 'rgba(76,175,80,1)',
+                    pointStrokeColor: '#fff',
+                    pointHighlightFill: '#fff',
+                    pointHighlightStroke: 'rgba(76,175,80,1)',
+                    data: [0, 0, 3, 4, 9, 14, 8, 14, 15, 10, 9, 0],
+                },
+                {
+                    label: '法律學院',
+                    fillColor: 'rgba(205,220,57,0.2)',
+                    strokeColor: 'rgba(205,220,57,1)',
+                    pointColor: 'rgba(205,220,57,1)',
+                    pointStrokeColor: '#fff',
+                    pointHighlightFill: '#fff',
+                    pointHighlightStroke: 'rgba(205,220,57,1)',
+                    data: [0, 0, 7, 9, 3, 18, 35, 11, 19, 11, 23, 0],
+                },
+                {
+                    label: '生命科學院',
+                    fillColor: 'rgba(225,193,7,0.2)',
+                    strokeColor: 'rgba(225,193,7,1)',
+                    pointColor: 'rgba(225,193,7,1)',
+                    pointStrokeColor: '#fff',
+                    pointHighlightFill: '#fff',
+                    pointHighlightStroke: 'rgba(225,193,7,1)',
+                    data: [0, 0, 1, 2, 0, 2, 3, 4, 2, 0, 3, 0],
+                }
+            ]
+        };
+        var chart1 = new Chart(context).Line(data, {});
+        document.getElementById('legend1').innerHTML = chart1.generateLegend();
+    </script>
+</body>
+</html>

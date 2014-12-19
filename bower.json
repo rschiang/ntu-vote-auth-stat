@@ -1,0 +1,22 @@
+{
+  "name": "ntu-vote-auth-stat",
+  "version": "0.1.0",
+  "homepage": "https://github.com/rschiang/ntu-vote-auth-stat",
+  "authors": [
+    "Poren Chiang <ren.chiang@gmail.com>"
+  ],
+  "description": "NTU Vote Auth Server Stat",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "chartjs": "1.0.1-beta.4",
+    "foundation": "~5.5.0"
+  }
+}
