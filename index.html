@@ -5,140 +5,66 @@
     <meta charset='utf-8'>
     <link rel='stylesheet' href='bower_components/foundation/css/foundation.css'>
     <script src='bower_components/chartjs/Chart.min.js'></script>
-    <style type="text/css">
-        #legend1 span {
-            display: inline-block;
-            width: 1em; height: 1em;
-        }
-    </style>
 </head>
 <body>
     <div class='row'>
         <div class='large-12 columns'>
             <h1>領票統計</h1>
             <canvas id='chart1' width='960px' height='640px'></canvas>
-            <div id='legend1'></div>
+            <p>統計數據僅供參考；時間點以無條件捨去至最接近的半小時為依據。</p>
         </div>
     </div>
     <script>
+        var colors = ['f44336', 'ff5722', 'ffc107', '4caf50', '2196f3', '3f51b5', '9c27b0', '00bcd4', '009688', 'e91e63'];
+        var labels = []; for (var i = 17; i < 39; i++) labels.push(Math.floor((i >= 26 ? i - 24 : i) / 2) + (i % 2 == 0 ? '' : ':30') + (i >= 24 ? 'pm' : 'am'));
+        var raw_data = {
+            '水源校區': [0, 1, 3, 4, 2, 0, 10, 8, 4, 12, 6, 2, 1, 1, 4, 2, 1, 3, 2, 3, 4, 0],
+            '二活': [0, 9, 2, 10, 1, 12, 5, 19, 3, 20, 9, 14, 7, 12, 7, 11, 6, 17, 19, 12, 5, 0],
+            '共同': [0, 10, 4, 8, 3, 10, 4, 29, 12, 26, 14, 17, 1, 36, 9, 9, 9, 8, 11, 6, 5, 0],
+            '男一舍': [0, 6, 2, 3, 4, 1, 4, 15, 19, 15, 17, 4, 5, 7, 10, 10, 9, 7, 8, 14, 4, 0],
+            '活大': [0, 8, 7, 5, 7, 4, 13, 19, 20, 20, 19, 6, 13, 11, 8, 4, 8, 7, 19, 18, 13, 1],
+            '新社科院': [1, 6, 5, 8, 2, 0, 0, 18, 18, 28, 14, 13, 9, 15, 8, 13, 9, 10, 9, 2, 5, 0],
+            '新生': [0, 11, 8, 30, 5, 12, 4, 18, 8, 6, 7, 6, 8, 8, 7, 5, 3, 2, 4, 2, 3, 0],
+            '普通': [0, 2, 5, 15, 2, 26, 2, 28, 12, 8, 10, 17, 13, 17, 8, 9, 4, 11, 18, 6, 1, 0],
+            '公衛大樓': [0, 3, 5, 5, 1, 1, 2, 6, 5, 0, 2, 1, 2, 1, 2, 0, 2, 2, 1, 4, 0, 0],
+            '醫學院': [0, 3, 12, 2, 2, 17, 6, 13, 10, 16, 5, 2, 2, 5, 7, 6, 3, 11, 9, 1, 6, 0],
+        }
+        var raw_data_cumu = {
+            '水源校區': [0, 1, 4, 8, 10, 10, 20, 28, 32, 44, 50, 52, 53, 54, 58, 60, 61, 64, 66, 69, 73, 73],
+            '二活': [0, 9, 11, 21, 22, 34, 39, 58, 61, 81, 90, 104, 111, 123, 130, 141, 147, 164, 183, 195, 200, 200],
+            '共同': [0, 10, 14, 22, 25, 35, 39, 68, 80, 106, 120, 137, 138, 174, 183, 192, 201, 209, 220, 226, 231, 231],
+            '男一舍': [0, 6, 8, 11, 15, 16, 20, 35, 54, 69, 86, 90, 95, 102, 112, 122, 131, 138, 146, 160, 164, 164],
+            '活大': [0, 8, 15, 20, 27, 31, 44, 63, 83, 103, 122, 128, 141, 152, 160, 164, 172, 179, 198, 216, 229, 230],
+            '新社科院': [1, 7, 12, 20, 22, 22, 22, 40, 58, 86, 100, 113, 122, 137, 145, 158, 167, 177, 186, 188, 193, 193],
+            '新生': [0, 11, 19, 49, 54, 66, 70, 88, 96, 102, 109, 115, 123, 131, 138, 143, 146, 148, 152, 154, 157, 157],
+            '普通': [0, 2, 7, 22, 24, 50, 52, 80, 92, 100, 110, 127, 140, 157, 165, 174, 178, 189, 207, 213, 214, 214],
+            '公衛大樓': [0, 3, 8, 13, 14, 15, 17, 23, 28, 28, 30, 31, 33, 34, 36, 36, 38, 40, 41, 45, 45, 45],
+            '醫學院': [0, 3, 15, 17, 19, 36, 42, 55, 65, 81, 86, 88, 90, 95, 102, 108, 111, 122, 131, 132, 138, 138],
+        }
+
+        function to_hex(b) {
+            var conv_table = { '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+                               'a': 10, 'b': 11, 'c': 12, 'd': 13, 'e': 14, 'f': 15 }
+            return conv_table[b[0]] * 16 + conv_table[b[1]];
+        }
+
+        var dataset = [];
+        for (var i in raw_data) {
+            var color = '#' + colors.shift();
+            dataset.push({
+                label: i,
+                data: raw_data[i],
+                fillColor: 'rgba('+to_hex(color.substring(1,3))+','+to_hex(color.substring(3,5))+','+to_hex(color.substring(5,7))+',.2)',
+                strokeColor: color,
+                pointColor: color,
+                pointStrokeColor: '#fff',
+                pointHighlightFill: '#fff',
+                pointHighlightStroke: color,
+            });
+        }
+
         var context = document.getElementById('chart1').getContext('2d');
-        var data = {
-            labels: ['8am', '9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm'],
-            datasets:[
-                {
-                    label: '文學院',
-                    fillColor: 'rgba(244,67,54,0.2)',
-                    strokeColor: 'rgba(244,67,54,1)',
-                    pointColor: 'rgba(244,67,54,1)',
-                    pointStrokeColor: '#fff',
-                    pointHighlightFill: '#fff',
-                    pointHighlightStroke: 'rgba(244,67,54,1)',
-                    data: [0, 0, 10, 12, 18, 28, 42, 21, 25, 15, 36, 0],
-                },
-                {
-                    label: '理學院',
-                    fillColor: 'rgba(233,30,99,0.2)',
-                    strokeColor: 'rgba(233,30,99,1)',
-                    pointColor: 'rgba(233,30,99,1)',
-                    pointStrokeColor: '#fff',
-                    pointHighlightFill: '#fff',
-                    pointHighlightStroke: 'rgba(233,30,99,1)',
-                    data: [0, 0, 9, 2, 6, 17, 8, 4, 5, 6, 7, 0],
-                },
-                {
-                    label: '社會科學院',
-                    fillColor: 'rgba(156,39,176,0.2)',
-                    strokeColor: 'rgba(156,39,176,1)',
-                    pointColor: 'rgba(156,39,176,1)',
-                    pointStrokeColor: '#fff',
-                    pointHighlightFill: '#fff',
-                    pointHighlightStroke: 'rgba(156,39,176,1)',
-                    data: [0, 1, 15, 12, 13, 49, 43, 27, 45, 23, 20, 0],
-                },
-                {
-                    label: '醫學院',
-                    fillColor: 'rgba(103,58,183,0.2)',
-                    strokeColor: 'rgba(103,58,183,1)',
-                    pointColor: 'rgba(103,58,183,1)',
-                    pointStrokeColor: '#fff',
-                    pointHighlightFill: '#fff',
-                    pointHighlightStroke: 'rgba(103,58,183,1)',
-                    data: [0, 0, 18, 39, 36, 25, 19, 5, 15, 13, 23, 0],
-                },
-                {
-                    label: '工學院',
-                    fillColor: 'rgba(63,81,181,0.2)',
-                    strokeColor: 'rgba(63,81,181,1)',
-                    pointColor: 'rgba(63,81,181,1)',
-                    pointStrokeColor: '#fff',
-                    pointHighlightFill: '#fff',
-                    pointHighlightStroke: 'rgba(63,81,181,1)',
-                    data: [0, 0, 15, 6, 10, 40, 34, 15, 9, 12, 13, 0],
-                },
-                {
-                    label: '生物資源暨農學院',
-                    fillColor: 'rgba(33,150,143,0.2)',
-                    strokeColor: 'rgba(33,150,143,1)',
-                    pointColor: 'rgba(33,150,143,1)',
-                    pointStrokeColor: '#fff',
-                    pointHighlightFill: '#fff',
-                    pointHighlightStroke: 'rgba(33,150,143,1)',
-                    data: [0, 0, 13, 14, 13, 42, 19, 14, 21, 12, 16, 0],
-                },
-                {
-                    label: '管理學院',
-                    fillColor: 'rgba(0,188,212,0.2)',
-                    strokeColor: 'rgba(0,188,212,1)',
-                    pointColor: 'rgba(0,188,212,1)',
-                    pointStrokeColor: '#fff',
-                    pointHighlightFill: '#fff',
-                    pointHighlightStroke: 'rgba(0,188,212,1)',
-                    data: [0, 0, 14, 9, 20, 30, 39, 24, 22, 20, 23, 0],
-                },
-                {
-                    label: '公共衛生學院',
-                    fillColor: 'rgba(0,150,136,0.2)',
-                    strokeColor: 'rgba(0,150,136,1)',
-                    pointColor: 'rgba(0,150,136,1)',
-                    pointStrokeColor: '#fff',
-                    pointHighlightFill: '#fff',
-                    pointHighlightStroke: 'rgba(0,150,136,1)',
-                    data: [0, 0, 7, 10, 5, 19, 4, 4, 5, 1, 5, 0],
-                },
-                {
-                    label: '電機資訊學院',
-                    fillColor: 'rgba(76,175,80,0.2)',
-                    strokeColor: 'rgba(76,175,80,1)',
-                    pointColor: 'rgba(76,175,80,1)',
-                    pointStrokeColor: '#fff',
-                    pointHighlightFill: '#fff',
-                    pointHighlightStroke: 'rgba(76,175,80,1)',
-                    data: [0, 0, 3, 4, 9, 14, 8, 14, 15, 10, 9, 0],
-                },
-                {
-                    label: '法律學院',
-                    fillColor: 'rgba(205,220,57,0.2)',
-                    strokeColor: 'rgba(205,220,57,1)',
-                    pointColor: 'rgba(205,220,57,1)',
-                    pointStrokeColor: '#fff',
-                    pointHighlightFill: '#fff',
-                    pointHighlightStroke: 'rgba(205,220,57,1)',
-                    data: [0, 0, 7, 9, 3, 18, 35, 11, 19, 11, 23, 0],
-                },
-                {
-                    label: '生命科學院',
-                    fillColor: 'rgba(225,193,7,0.2)',
-                    strokeColor: 'rgba(225,193,7,1)',
-                    pointColor: 'rgba(225,193,7,1)',
-                    pointStrokeColor: '#fff',
-                    pointHighlightFill: '#fff',
-                    pointHighlightStroke: 'rgba(225,193,7,1)',
-                    data: [0, 0, 1, 2, 0, 2, 3, 4, 2, 0, 3, 0],
-                }
-            ]
-        };
-        var chart1 = new Chart(context).Line(data, {});
-        document.getElementById('legend1').innerHTML = chart1.generateLegend();
+        var chart1 = new Chart(context).Line({ labels: labels, datasets: dataset }, { multiTooltipTemplate: "<%if (datasetLabel) {%><%=datasetLabel%>: <%}%><%= value %>" });
     </script>
 </body>
 </html>
