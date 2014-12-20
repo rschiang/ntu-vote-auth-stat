@@ -17,13 +17,20 @@
                 <dd><a href="by_time.html">分時段</a></dd>
                 <dd class="active"><a href="by_college.html">分學院</a></dd>
             </dl>
-            <ul id="charts" class="large-block-grid-3">
-            </div>
-            <p>統計數據僅供參考；時間點以無條件捨去至最接近的半小時為依據。</p>
+            <ul id="charts" class="large-block-grid-4">
+            </ul>
+            <footer class="clearfix">
+                <div class="large-9 columns">
+                    <p>統計數據僅供參考；時間點以無條件捨去至最接近的半小時為依據。</p>
+                </div>
+                <div class="large-3 columns">
+                    <p class="large-only-text-right">© <a href="https://ntuosc.org">臺灣大學開源社</a></p>
+                </div>
+            </footer>
         </div>
     </div>
     <script>
-        var labels = ['文學院', '理學院', '社會科學院', '醫學院', '工學院', '生物資源暨農學院', '管理學院', '公共衛生學院', '電機資訊學院', '法律學院', '生命科學院']
+        var labels = ['文學院', '理學院', '社會科學院', '醫學院', '工學院', '生農學院', '管理學院', '公衛學院', '電機資訊學院', '法律學院', '生命科學院']
         var datasets = {
             '水源校區': [66, 1, 2, 0, 1, 1, 1, 0, 0, 1, 0],
             '二活': [3, 8, 25, 2, 6, 13, 128, 1, 4, 10, 0],
@@ -35,19 +42,25 @@
             '普通': [57, 12, 23, 21, 16, 38, 14, 7, 10, 12, 4],
             '公衛大樓': [1, 1, 0, 5, 0, 1, 0, 37, 0, 0, 0],
             '醫學院': [1, 1, 1, 125, 5, 1, 0, 2, 1, 1, 0],
+            '總計': [228, 74, 263, 199, 172, 180, 214, 64, 91, 142, 18],
         }
 
         var charts = document.getElementById('charts');
         for (var station in datasets) {
+            var dataset = datasets[station];
+            var sum = dataset.reduce(function(a, b) { return a + b; });
+
             var item = document.createElement('li');
             var header = document.createElement('h5');
             var canvas = document.createElement('canvas');
 
-            header.innerText = station;
-            canvas.style = 'width: 320px; height: 240px;';
+            header.innerHTML = station + ' <small>(' + sum + ')</small>';
+            canvas.width = 210;
+            canvas.height = 160;
 
-            var dataset = datasets[station];
-            var chart = new Chart(canvas.getContext('2d')).Pie(generate_flat_dataset(dataset, labels), {});
+            var chart = new Chart(canvas.getContext('2d')).Pie(generate_flat_dataset(dataset, labels), {
+                tooltipTemplate: '<%if (label){%><%=label%>: <%}%><%= value %> (<%= Math.round(value * 100 / '+sum+') %>%)',
+            });
 
             item.appendChild(header);
             item.appendChild(canvas);
