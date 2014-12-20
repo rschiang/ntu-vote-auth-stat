@@ -3,6 +3,9 @@
 <head>
     <title>臺大開源社：103-1 學代選舉領票統計</title>
     <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <meta property="og:title" content="103-1 學代選舉領票統計">
     <meta property="og:type" content="website">
     <meta property="og:url" content="http://vote.ntuosc.org/statistics/103-1/">
@@ -26,17 +29,21 @@
                 <dd><a href="by_station.html">依票所</a></dd>
                 <dd><a href="by_college.html">依學院</a></dd>
             </dl>
-            <canvas id="chart1" width="960" height="640"></canvas>
-            <footer class="clearfix">
-                <div class="large-9 columns">
-                    <p>統計數據僅供參考；時間點以無條件捨去至最接近的半小時為依據。</p>
-                </div>
-                <div class="large-3 columns">
-                    <p class="large-only-text-right">© <a href="https://ntuosc.org">臺灣大學開源社</a></p>
-                </div>
-            </footer>
         </div>
     </div>
+    <div class="row">
+        <div class="large-12 columns">
+            <canvas id="chart1" width="960" height="640"></canvas>
+        </div>
+    </div>
+    <footer class="row">
+        <div class="large-9 columns">
+            <p>統計數據包含合辦選舉，僅供參考；實際投票時間與人數因網路狀況可能有所出入。</p>
+        </div>
+        <div class="large-3 columns">
+            <p class="large-only-text-right">© <a href="https://ntuosc.org">臺灣大學開源社</a></p>
+        </div>
+    </footer>
     <script>
         var labels = []; for (var i = 17; i < 39; i++)
         labels.push(Math.floor((i >= 26 ? i - 24 : i) / 2) + (i % 2 == 0 ? '' : ':30') + (i >= 24 ? 'pm' : 'am'));
@@ -56,6 +63,14 @@
 
         var context = document.getElementById('chart1').getContext('2d');
         var chart1 = new Chart(context).Line({ labels: labels, datasets: generate_dataset(raw_data) }, { multiTooltipTemplate: "<%if (datasetLabel) {%><%=datasetLabel%>: <%}%><%= value %>" });
+    </script>
+    <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-46787322-2', 'auto');
+        ga('send', 'pageview');
     </script>
     <!-- (C) RSChiang / NTUOSC 2014. https://ntuosc.org -->
 </body>
