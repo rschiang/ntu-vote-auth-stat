@@ -1,3 +1,4 @@
+from account.models import *
 from core.models import *
 from django.conf import settings
 
@@ -20,5 +21,8 @@ for x, y in dataset:
     result[x] = x_data
 
 # Print
+stations = { station.external_id: station.name for station in Station.objects.all() }
+total = [0 for i in range(len(stations))]
 for x, value in result.items():
-    print('%s: [%s]' % (x, ', '.join([str(value[i]) for i in keys])))
+    values = [value[i] for i in keys]
+    entries[sum(values)] = ('"%s": [%s]' % (stations[x], ', '.join([str(i) for i in values])))
