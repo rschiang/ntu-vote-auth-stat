@@ -9,7 +9,7 @@ college_ids = sorted(settings.COLLEGE_NAMES.keys())
 
 for station in Station.objects.all():
     stations[station.external_id] = station.name
-    station_ids.append(station.id)
+    station_ids.append(station.external_id)
 
 station_ids.sort()
 
@@ -31,19 +31,21 @@ for x, y in dataset:
 # Print by stations
 print('依票所：')
 total = [0 for i in station_ids]
-for x in len(station_ids):
+for x in range(len(station_ids)):
     station_id = station_ids[x]
     values = result[x]
     total = [a + b for a, b in zip(total, values)]
     print('"%s": [%s],' % (stations[station_id], print_int_list(values)))
+
 print('"總計": [%s],' % print_int_list(total))
 
 # Print by colleges
 print('依學院：')
 total = [0 for i in college_ids]
-for y in len(college_ids):
+for y in range(len(college_ids)):
     college_id = college_ids[y]
-    values = [result[x][y] for x in len(station_ids)]
+    values = [result[x][y] for x in range(len(station_ids))]
     total = [a + b for a, b in zip(total, values)]
     print('"%s": [%s],' % (settings.COLLEGE_NAMES[college_id], print_int_list(values)))
+
 print('"總計": [%s],' % print_int_list(total))
