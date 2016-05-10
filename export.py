@@ -37,3 +37,13 @@ for x in len(station_ids):
     total = [a + b for a, b in zip(total, values)]
     print('"%s": [%s],' % (stations[station_id], print_int_list(values)))
 print('"總計": [%s],' % print_int_list(total))
+
+# Print by colleges
+print('依學院：')
+total = [0 for i in college_ids]
+for y in len(college_ids):
+    college_id = college_ids[y]
+    values = [result[x][y] for x in len(station_ids)]
+    total = [a + b for a, b in zip(total, values)]
+    print('"%s": [%s],' % (settings.COLLEGE_NAMES[college_id], print_int_list(values)))
+print('"總計": [%s],' % print_int_list(total))
