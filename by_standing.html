@@ -25,16 +25,17 @@
             <dl class="sub-nav">
                 <dt>檢視：</dt>
                 <dd><a href="index.html">累積圖</a></dd>
-                <dd class="active"><a href="by_time.html">分布圖</a></dd>
+                <dd><a href="by_time.html">分布圖</a></dd>
                 <dd><a href="by_station.html">依票所</a></dd>
                 <dd><a href="by_college.html">依學院</a></dd>
-                <dd><a href="by_standing.html">依學制</a></dd>
+                <dd class="active"><a href="by_standing.html">依學制</a></dd>
             </dl>
         </div>
     </div>
     <div class="row">
         <div class="large-12 columns">
-            <canvas id="chart1" width="960" height="640"></canvas>
+            <ul id="charts" class="large-block-grid-4">
+            </ul>
         </div>
     </div>
     <footer class="row">
@@ -46,24 +47,43 @@
         </div>
     </footer>
     <script>
-        var labels = ["8:30am", "9am", "9:30am", "10am", "10:30am", "11am", "11:30am", "12pm", "12:30pm", "1pm", "1:30pm", "2pm", "2:30pm", "3pm", "3:30pm", "4pm", "4:30pm", "5pm", "5:30pm", "6pm", "6:30pm", "7pm", "7:30pm", "8pm"];
-
-        var raw_data = {
-            '頤賢': [0, 0, 9, 24, 7, 9, 18, 50, 39, 39, 0, 43, 32, 54, 37, 18, 23, 11, 24, 30, 0, 0, 0, 0],
-            '活大': [0, 0, 5, 12, 17, 11, 14, 34, 46, 22, 0, 26, 18, 24, 27, 17, 17, 23, 13, 19, 27, 14, 8, 0],
-            '普通': [0, 0, 11, 23, 1, 24, 2, 45, 20, 20, 0, 20, 20, 35, 22, 9, 12, 11, 24, 14, 0, 0, 0, 0],
-            '大一女': [0, 0, 4, 20, 12, 7, 13, 27, 35, 22, 0, 17, 15, 22, 19, 3, 19, 12, 32, 19, 2, 0, 0, 0],
-            '共同': [0, 0, 2, 19, 5, 8, 4, 26, 24, 10, 0, 22, 7, 30, 11, 22, 18, 17, 12, 7, 0, 0, 0, 0],
-            '男一': [0, 0, 6, 18, 9, 9, 7, 19, 30, 14, 0, 20, 20, 19, 11, 13, 7, 13, 12, 16, 0, 0, 0, 0],
-            '二活': [0, 0, 2, 13, 4, 7, 6, 16, 7, 17, 0, 5, 7, 16, 12, 14, 4, 11, 23, 20, 11, 4, 4, 1],
-            '新生': [0, 0, 3, 23, 3, 4, 4, 33, 23, 9, 0, 7, 7, 26, 5, 3, 7, 12, 9, 4, 0, 0, 0, 0],
-            '醫圖': [0, 0, 9, 6, 4, 3, 5, 0, 9, 11, 0, 2, 2, 21, 22, 13, 0, 12, 7, 1, 0, 0, 0, 0],
-            '水源': [0, 0, 2, 1, 6, 2, 0, 5, 4, 8, 0, 12, 1, 6, 4, 0, 2, 0, 6, 3, 0, 0, 0, 0],
-            '公衛': [0, 0, 2, 1, 2, 0, 0, 5, 6, 6, 0, 0, 2, 4, 0, 0, 4, 1, 6, 4, 0, 0, 0, 0]
+        var labels = ['大學部', '碩士班', '博士班', '交換/訪問生', '在職/進修生']
+        var datasets = {
+            '頤賢': [379, 83, 3, 1, 1],
+            '活大': [352, 41, 1, 0, 0],
+            '普通': [298, 11, 4, 0, 0],
+            '大一女': [275, 22, 2, 1, 0],
+            '共同': [222, 19, 3, 0, 0],
+            '男一': [233, 8, 2, 0, 0],
+            '二活': [188, 15, 1, 0, 0],
+            '新生': [173, 8, 1, 0, 0],
+            '醫圖': [118, 8, 1, 0, 0],
+            '水源': [55, 6, 1, 0, 0],
+            '公衛': [33, 10, 0, 0, 0],
+            '總計': [2326, 231, 19, 2, 1],
         }
 
-        var context = document.getElementById('chart1').getContext('2d');
-        var chart1 = new Chart(context).Line({ labels: labels, datasets: generate_dataset(raw_data) }, { multiTooltipTemplate: "<%if (datasetLabel) {%><%=datasetLabel%>: <%}%><%= value %>" });
+        var charts = document.getElementById('charts');
+        for (var station in datasets) {
+            var dataset = datasets[station];
+            var sum = dataset.reduce(function(a, b) { return a + b; });
+
+            var item = document.createElement('li');
+            var header = document.createElement('h5');
+            var canvas = document.createElement('canvas');
+
+            header.innerHTML = station + ' <small>(' + sum + ')</small>';
+            canvas.width = 210;
+            canvas.height = 160;
+
+            var chart = new Chart(canvas.getContext('2d')).Pie(generate_flat_dataset(dataset, labels), {
+                tooltipTemplate: '<%if (label){%><%=label%>: <%}%><%= value %> (<%= Math.round(value * 100 / '+sum+') %>%)',
+            });
+
+            item.appendChild(header);
+            item.appendChild(canvas);
+            charts.appendChild(item);
+        }
     </script>
     <script>
         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
