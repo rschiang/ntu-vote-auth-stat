@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>臺大開源社：105-2 學生會暨自治組織選舉領票統計</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta property="og:title" content="105-2 學生會暨自治組織選舉領票統計">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="http://vote.ntuosc.org/statistics/105-2/">
+    <meta property="og:image" content="http://vote.ntuosc.org/statistics/105-2/assets/chart.png">
+    <meta property="og:site_name" content="臺灣大學開源社">
+    <meta property="og:description" content="開源社負責開發電子投票「嗶卡領票」的身份驗證系統，並針對這次學生代表選舉相關數據做了分析。一起來看看哪個票點最熱門、哪裡又是拓荒前線吧！">
+
+    <link rel="shortcut icon" href="assets/favicon.png" type="image/png">
+    <script src="vendor/d3.v4.min.js"></script>
+    <style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body, html {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    </style>
+</head>
+<body>
+    <div class="chart">
+        <svg></svg>
+    </div>
+    <script>
+        var margin = { top: 20, right: 60, bottom: 20, left: 60 };
+        var width = 960, height = 540;
+        var chart = d3.select("svg")
+                        .attr("width", width)
+                        .attr("height", height)
+                        .append("g")
+                        .attr("transform", "translate("+margin.left+","+margin.top+")");
+
+        width -= margin.left + margin.right;
+        height -= margin.top + margin.bottom;
+
+        var x = d3.scaleTime().range([0, width]);
+        var y = d3.scaleLinear().range([height, 0]);
+        var color = d3.scaleOrdinal(['#f44336', '#ff5722', '#ffc107', '#4caf50', '#2196f3', '#3f51b5',
+                                    '#9c27b0', '#00bcd4', '#009688', '#e91e63', '#795548', '#607d8b']);
+        var area = d3.area()
+                    .x(function(d) { return x(d.data.time); })
+                    .y0(function(d) { return y(d[0]); })
+                    .y1(function(d) { return y(d[1]); });
+        var stack = d3.stack();
+        var parseTime = d3.timeParse("%H:%M");
+        var entries, table, series;
+
+        var xAxis = d3.axisBottom().scale(x);
+        var yAxis = d3.axisLeft().scale(y);
+
+        d3.csv("data/105-2/station-time.csv", function(data) {
+            entries = data;
+
+            series = d3.nest()
+                        .key(function(d) { return d.station; })
+                        .map(entries).keys();
+
+            table = [];
+            d3.nest()
+                .key(function(d) { return d.time; }).sortKeys(d3.ascending)
+                .entries(entries)
+                .forEach(function(t) {
+                    var i = { time: parseTime(t.key), sum: 0 };
+                    t.values.forEach(function(e) {
+                        i[e.station] = +e.count;
+                        i.sum += +e.count;
+                    });
+                    table.push(i);
+                });
+
+            x.domain(d3.extent(table, function(d) { return d.time; }));
+            y.domain([0, d3.max(table, function(d) { return d.sum; })]);
+
+            stack.keys(series)
+                .value(function(d, key) { return d[key] || 0; })
+                .order(d3.stackOrderAscending)
+                .offset(d3.stackOffsetNone);
+
+            chart.selectAll(".station")
+                .data(stack(table))
+                .enter()
+                .append("g")
+                .attr("class", "station")
+                .append("path")
+                .attr("class", "area")
+                .attr("d", area)
+                .style("fill", function(d) { return color(d.key); });
+
+            chart.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0,"+height+")")
+                .call(xAxis);
+
+            chart.append("g")
+                .attr("class", "y axis")
+                .call(yAxis);
+        });
+    </script>
+    <!-- (C) RSChiang / NTUOSC 2014. https://ntuosc.org -->
+</body>
+</html>
