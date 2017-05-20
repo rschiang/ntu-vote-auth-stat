@@ -57,16 +57,19 @@
 
         var x = d3.scaleTime().range([0, width]);
         var y = d3.scaleLinear().range([height, 0]);
-        var color = d3.scaleOrdinal(['#f44336', '#ff5722', '#ffc107', '#4caf50', '#2196f3', '#3f51b5',
-                                    '#9c27b0', '#00bcd4', '#009688', '#e91e63', '#795548', '#607d8b']);
+        var color = {};
         var area = d3.area()
                     .x(function(d) { return x(d.data.time); })
                     .y0(function(d) { return y(d[0]); })
                     .y1(function(d) { return y(d[1]); })
-                    .curve(d3.curveCardinal);
+                    .curve(d3.curveMonotoneX);
         var stack = d3.stack();
+        var graph = chart.append("g")
+                        .attr("class", "graph")
+                        .attr("transform", "translate(0,"+(-height/2)+")")
+
         var parseTime = d3.timeParse("%H:%M");
-        var entries, series;
+        var entries, series, seriesNames;
         var table = d3.map();
 
         var xAxis = d3.axisBottom().scale(x);
@@ -87,13 +90,17 @@
 
         d3.csv("data/105-2/station-time.csv", function(data) {
             entries = data;
-
             series = d3.nest()
                         .key(function(d) { return d.station; })
                         .map(entries).keys();
+            color.centered = function(i) {
+                var rel = (i - (series.length / 2));
+                var pos = ((rel > 0 ? 0 : 1) + Math.abs(rel) * 2) / (series.length + 1);
+                return d3.interpolatePlasma(1 - pos);
+            }
 
             d3.nest()
-                .key(function(d) { return d.time; }).sortKeys(d3.ascending)
+                .key(function(d) { return d.time; })
                 .entries(entries)
                 .forEach(function(t) {
                     i = table.get(t.key);
@@ -114,18 +121,15 @@
                 .order(d3.stackOrderInsideOut)
                 .offset(d3.stackOffsetSilhouette);
 
-            chart.append("g")
-                .attr("class", "series")
-                .attr("transform", "translate(0,"+(-height/2)+")")
-                .selectAll(".station")
+            graph.selectAll(".series")
                 .data(stack(table))
                 .enter()
                 .append("g")
-                .attr("class", "station")
+                .attr("class", "series")
                 .append("path")
                 .attr("class", "area")
                 .attr("d", area)
-                .style("fill", function(d) { return color(d.key); });
+                .style("fill", function(d) { return color.centered(d.index); })
 
             chart.append("g")
                 .attr("class", "x axis")
@@ -135,7 +139,28 @@
             chart.append("g")
                 .attr("class", "y axis")
                 .call(yAxis);
+
+            setTimeout(stackedArea, 5000);
         });
+
+        function stackedArea() {
+            color.stacked = function(i) {
+                return d3.interpolatePlasma(1 - i / (series.length - 1));
+            }
+
+            stack.order(d3.stackOrderDescending)
+                .offset(d3.stackOffsetNone);
+
+            graph.transition(250)
+                .attr("transform", "translate(0,0)");
+
+            graph.selectAll(".series")
+                .data(stack(table))
+                .transition(250)
+                .select(".area")
+                .attr("d", area)
+                .style("fill", function(d) { return color.stacked(d.index); })
+        }
     </script>
     <!-- (C) RSChiang / NTUOSC 2014. https://ntuosc.org -->
 </body>
