@@ -14,7 +14,7 @@ var y = d3.scaleLinear().range([height, 0]);
 var color = {
     centered: function(i) {
         var rel = (i - (series.length / 2));
-        var pos = ((rel > 0 ? 0 : 1) + Math.abs(rel) * 2) / (series.length + 1);
+        var pos = ((rel > 0 ? 1 : 0) + Math.abs(rel) * 2) / (series.length + 1);
         return d3.interpolatePlasma(1 - pos);
     },
     stacked: function(i) {
@@ -69,6 +69,29 @@ selector.append("line")
     .attr("stroke-width", "1px")
     .attr("style", "pointer-events: none");
 
+var tooltip = chart.append("g")
+    .attr("class", "tooltip")
+    .attr("transform", "translate(20,20)");
+
+tooltip.append("text")
+    .attr("class", "time-field")
+    .attr("fill", "#9e9e9e")
+    .attr("font-size", "12px");
+
+tooltip.append("text")
+    .attr("class", "value-field")
+    .attr("y", "24")
+    .attr("font-size", "24px");
+
+chart.append("g")
+    .attr("class", "tooltip")
+    .attr("transform", "translate("+(width-20)+",20)")
+    .append("text")
+    .attr("class", "series-field")
+    .attr("text-anchor", "end")
+    .attr("fill", "#9e9e9e")
+    .attr("font-size", "12px");
+
 d3.csv("data/105-2/station-time.csv", function(data) {
     entries = data;
     series = d3.nest()
@@ -121,9 +144,15 @@ d3.csv("data/105-2/station-time.csv", function(data) {
             for (var j in table) {
                 item = table[j];
                 if (Math.abs(item.time - invertedx) <= 450000) {
-                    d3.select(".tooltip")
-                        .text(d.key + " " + formatTime(item.time) + " " + (item[d.key] || 0));
-                    d3.select(".selector")
+                    d3.selectAll(".tooltip")
+                        .attr("visibility", "visible");
+                    d3.select(".tooltip .time-field")
+                        .text(formatTime(item.time) + " @ " + d.key);
+                    d3.selectAll(".tooltip .series-field")
+                        .text("同時段總計 " + item.sum);
+                    d3.selectAll(".tooltip .value-field")
+                        .text(item[d.key] || 0);
+                    selector
                         .attr("transform", "translate("+mousex+",0)")
                         .attr("opacity", .87);
                     break;
@@ -136,15 +165,12 @@ d3.csv("data/105-2/station-time.csv", function(data) {
                 .ease(d3.easeExpOut)
                 .attr("opacity", 1);
 
-            d3.select(this).attr("stroke-width", "0px");
-            d3.select(".tooltip").text("");
-            d3.select(".selector").attr("opacity", 0);
+            d3.select(this)
+                .attr("stroke-width", "0px");
+            d3.selectAll(".tooltip")
+                .attr("visibility", "hidden");
+            selector.attr("opacity", 0);
         });
-
-    chart.append("g")
-        .attr("transform", "translate(20,20)")
-        .append("text")
-        .attr("class", "tooltip");
 
     chart.append("g")
         .attr("class", "x axis")
@@ -195,4 +221,5 @@ var toggle = false;
 graph.on("click", function() {
     toggle = !toggle;
     if (toggle) stackedArea(); else streamgraph();
+    d3.select(".hint").attr("visibility", "hidden");
 });
