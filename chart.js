@@ -35,6 +35,8 @@ var timeChart = (function() {
             .attr("class", "graph")
             .attr("transform", "translate(0,"+(-self.height/2)+")");
 
+        self.graphArea.on("click", self.toggleChartType);
+
         self.xAxis = d3.axisBottom().scale(self.x);
         self.yAxis = d3.axisLeft().scale(self.y);
 
@@ -175,9 +177,11 @@ var timeChart = (function() {
             selection.exit()
                 .remove();
 
-            // Set up graph type and toggle
-            self.graphArea.on("click", self.toggleChartType);
-            self.streamgraph();
+            // Initialize graph by its type
+            if (self.isStackedArea)
+                self.stackedArea();
+            else
+                self.streamgraph();
         });
     };
 

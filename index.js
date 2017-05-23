@@ -36,7 +36,7 @@ var standing = (function() {
     };
 
     self.columnKey = function(d) {
-        return (d.standing.charAt(0) == 'B' && d.standing.length > 1) ? ('大學部 ' + d.standing) : self.labels[self.ids.indexOf(d.standing)];
+        return (d.standing.length > 1 && d.standing.charAt(0) == 'B') ? ('大學部 ' + d.standing) : self.labels[self.ids.indexOf(d.standing)];
     };
 
     return self;
