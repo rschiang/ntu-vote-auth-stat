@@ -11,7 +11,7 @@ var college = (function() {
     };
 
     self.columnKey = function(d) {
-        return self.labels[self.ids.indexOf(d.college)]
+        return self.labels[self.ids.indexOf(d.college)];
     };
 
     return self;
@@ -19,9 +19,9 @@ var college = (function() {
 
 var standing = (function() {
     var self = {
-        labels: ['大學部', '碩士生', '博士生', '交換/訪問生', '在職/進修生'],
-        colors: ["#4caf50", "#00bcd4", "#0097a7", "#009688", "#cddc39"],
-        ids: ['B', 'R', 'D', 'T', 'P'],
+        labels: ['大學部', '研究生', '碩士生', '博士生', '交換/訪問生', '在職/進修生'],
+        colors: ["#4caf50", "#00b8d4", "#00bcd4", "#0097a7", "#009688", "#cddc39"],
+        ids: ['B', 'G', 'R', 'D', 'T', 'P'], /* B and G are generic identity types */
         shades: ["#aed581", "#9ccc65", "#8bc34a", "#4caf50", "#43a047", "#388e3c", "#2e7d32"]
     }
 
@@ -36,13 +36,19 @@ var standing = (function() {
     };
 
     self.columnKey = function(d) {
-        return (d.standing.charAt(0) == 'B') ? ('大學部 ' + d.standing) : self.labels[self.ids.indexOf(d.standing)];
+        return (d.standing.charAt(0) == 'B' && d.standing.length > 1) ? ('大學部 ' + d.standing) : self.labels[self.ids.indexOf(d.standing)];
     };
 
     return self;
 })();
 
 var meta = {
+    "104-1": {
+        startTime: { hour: 9, minute: 0 },
+        endTime: { hour: 19, minute: 0 },
+        gap: 15,
+        dimensions: ['station', 'college', 'standing']
+    },
     "105-2": {
         startTime: { hour: 9, minute: 30 },
         endTime: { hour: 20, minute: 0 },

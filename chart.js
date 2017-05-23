@@ -159,9 +159,10 @@ var timeChart = (function() {
                 .value(function(d, key) { return d[key] || 0; });
 
             // Create series
-            self.graphArea.selectAll(".series")
-                .data(self.stack(self.table))
-                .enter()
+            var selection = self.graphArea.selectAll(".series")
+                .data(self.stack(self.table));
+
+            selection.enter()
                 .append("g")
                 .attr("class", "series")
                 .append("path")
@@ -170,6 +171,9 @@ var timeChart = (function() {
                 .on("mouseover", self.onSeriesMouseOver)
                 .on("mousemove", self.onSeriesMouseMove)
                 .on("mouseout", self.onSeriesMouseLeave);
+
+            selection.exit()
+                .remove();
 
             // Set up graph type and toggle
             self.graphArea.on("click", self.toggleChartType);
@@ -260,7 +264,7 @@ var timeChart = (function() {
             .ease(d3.easeCubic)
             .select(".area")
             .attr("d", self.area)
-            .style("fill", function(d) { console.log(d); return self.colors.stacked(d); })
+            .style("fill", function(d) { return self.colors.stacked(d); })
     };
 
     self.toggleChartType = function() {
