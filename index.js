@@ -43,6 +43,18 @@ var standing = (function() {
 })();
 
 var meta = {
+    "103-1": {
+        startTime: { hour: 9, minute: 0 },
+        endTime: { hour: 19, minute: 0 },
+        gap: 30,
+        dimensions: ['station']
+    },
+    "103-2": {
+        startTime: { hour: 9, minute: 0 },
+        endTime: { hour: 19, minute: 0 },
+        gap: 30,
+        dimensions: ['station']
+    },
     "104-1": {
         startTime: { hour: 9, minute: 0 },
         endTime: { hour: 19, minute: 0 },
