@@ -87,15 +87,17 @@ var timeChart = (function() {
             .attr("class", "y axis");
 
         // Visualization helpers
-        self.streamColor = function(i) {
+        self.defaultColors = {};
+
+        self.defaultColors.stream = function(d) {
             var len = self.series.length;
-            var rel = (i - (len / 2));
+            var rel = (d.index - (len / 2));
             var pos = ((rel > 0 ? 1 : 0) + Math.abs(rel) * 2) / (len + 1);
             return d3.interpolatePlasma(1 - pos);
         }
 
-        self.stackedColor = function(i) {
-            return d3.interpolatePlasma(1 - i / (self.series.length - 1));
+        self.defaultColors.stacked = function(d) {
+            return d3.interpolatePlasma(1 - d.index / (self.series.length - 1));
         }
     };
 
@@ -118,11 +120,14 @@ var timeChart = (function() {
             self.table.set(t, { time: time.parse(t), sum: 0 });
         }
 
+        // Set up visualization overrides if needed
+        self.colors = meta.colors || self.defaultColors;
+
         d3.csv(meta.dataPath, function(data) {
             // Extract series first, as stacked graph groups by x-axis (time)
             self.entries = data;
             self.series = d3.nest()
-                .key(function(d) { return d[meta.column]; })
+                .key(meta.column)
                 .map(data).keys();
 
             // Fill data into preallocated time slots
@@ -132,7 +137,7 @@ var timeChart = (function() {
                 .forEach(function(t) {
                     i = self.table.get(t.key);
                     t.values.forEach(function(e) {
-                        i[e[meta.column]] = +e.count;
+                        i[meta.column(e)] = +e.count;
                         i.sum += +e.count;
                     });
                     self.table.set(t.key, i);
@@ -237,7 +242,7 @@ var timeChart = (function() {
             .ease(d3.easeCubic)
             .select(".area")
             .attr("d", self.area)
-            .style("fill", function(d) { return self.streamColor(d.index); });
+            .style("fill", function(d) { return self.colors.stream(d); });
     };
 
     self.stackedArea = function(duration) {
@@ -255,7 +260,7 @@ var timeChart = (function() {
             .ease(d3.easeCubic)
             .select(".area")
             .attr("d", self.area)
-            .style("fill", function(d) { return self.stackedColor(d.index); })
+            .style("fill", function(d) { console.log(d); return self.colors.stacked(d); })
     };
 
     self.toggleChartType = function() {
@@ -269,11 +274,3 @@ var timeChart = (function() {
 
     return self;
 })();
-
-timeChart.init();
-timeChart.initData({
-    dataPath: "data/105-2/station-time.csv",
-    startTime: { hour: 9, minute: 30 },
-    endTime: { hour: 20, minute: 0 },
-    gap: 15, column: "station"
-});
