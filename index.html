@@ -24,6 +24,7 @@
     <nav>
         <a onclick="byStation()" href="#">投票所</a>
         <a onclick="byCollege()" href="#">學院</a>
+        <a onclick="byStanding()" href="#">屆數</a>
     </nav>
     <div class="chart">
         <svg></svg>
@@ -66,7 +67,32 @@
         });
     }
 
-    byCollege();
+    function byStanding() {
+        var thisYear = 105;
+        var shades = ["#aed581", "#9ccc65", "#8bc34a", "#4caf50", "#43a047", "#388e3c", "#2e7d32"];
+        var otherColors = { "R": "#00bcd4", "D": "#0097a7", "P": "#009688", "T": "#cddc39" }
+
+        function coloring(d) {
+            if (d.key.charAt(0) == 'B') {
+                var year = +(d.key.substr(1));
+                year = Math.min(shades.length - 1, thisYear - ((year < 49 ? 100 : 0) + year));
+                return shades[year];
+            }
+            else return otherColors[d.key];
+        }
+
+        timeChart.initData({
+            dataPath: "data/105-2/standing-time.csv",
+            startTime: { hour: 9, minute: 30 },
+            endTime: { hour: 20, minute: 0 },
+            gap: 15, column: function(d) { return d.standing },
+            colors: {
+                stream: coloring, stacked: coloring
+            }
+        });
+    }
+
+    byStanding();
     </script>
     <!-- (C) RSChiang / NTUOSC 2017. https://ntuosc.org -->
 </body>
