@@ -166,6 +166,8 @@ var timeChart = (function() {
                 .on("mousemove", self.onSeriesMouseMove)
                 .on("mouseout", self.onSeriesMouseLeave);
 
+            // Set up graph type and toggle
+            self.graphArea.on("click", self.toggleChartType);
             self.streamgraph();
         });
     };
@@ -256,6 +258,15 @@ var timeChart = (function() {
             .style("fill", function(d) { return self.stackedColor(d.index); })
     };
 
+    self.toggleChartType = function() {
+        self.isStackedArea = !self.isStackedArea;
+        if (self.isStackedArea)
+            self.stackedArea();
+        else {
+            self.streamgraph();
+        }
+    }
+
     return self;
 })();
 
@@ -265,10 +276,4 @@ timeChart.initData({
     startTime: { hour: 9, minute: 30 },
     endTime: { hour: 20, minute: 0 },
     gap: 15, column: "station"
-});
-
-var toggle = false;
-timeChart.graphArea.on("click", function() {
-    toggle = !toggle;
-    if (toggle) timeChart.stackedArea(); else timeChart.streamgraph();
 });
