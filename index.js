@@ -1,225 +1,274 @@
-var margin = { top: 30, right: 60, bottom: 30, left: 60 };
-var width = 960, height = 540;
-var chart = d3.select("svg")
-                .attr("preserveAspectRatio", "xMidYMid meet")
-                .attr("viewBox", "0 0 "+width+" "+height)
-                .append("g")
-                .attr("transform", "translate("+margin.left+","+margin.top+")");
+//
 
-width -= margin.left + margin.right;
-height -= margin.top + margin.bottom;
-
-var x = d3.scaleTime().range([0, width]);
-var y = d3.scaleLinear().range([height, 0]);
-var color = {
-    centered: function(i) {
-        var rel = (i - (series.length / 2));
-        var pos = ((rel > 0 ? 1 : 0) + Math.abs(rel) * 2) / (series.length + 1);
-        return d3.interpolatePlasma(1 - pos);
-    },
-    stacked: function(i) {
-        return d3.interpolatePlasma(1 - i / (series.length - 1));
-    }
-};
-var area = d3.area()
-            .x(function(d) { return x(d.data.time); })
-            .y0(function(d) { return y(d[0]); })
-            .y1(function(d) { return y(d[1]); })
-            .curve(d3.curveMonotoneX);
-var stack = d3.stack();
-var graph = chart.append("g")
-                .attr("class", "graph")
-                .attr("transform", "translate(0,"+(-height/2)+")");
-
-var parseTime = d3.timeParse("%H:%M");
-var formatTime = d3.timeFormat("%I:%M%p");
-
-var entries, series, seriesNames;
-var table = d3.map();
-
-var duration = 120, uiDuration = 70;
-
-var xAxis = d3.axisBottom().scale(x);
-var yAxis = d3.axisLeft().scale(y);
-
-var timeRange = {
-    starting: { hour: 9, minute: 30 },
-    ending: { hour: 20, minute: 0 }
+/* Utility functions */
+var time = {
+    parse: d3.timeParse("%H:%M"),
+    format: d3.timeFormat("%I:%M%p")
 }
 
-for (var h = timeRange.starting.hour, m = timeRange.starting.minute;
-    h < timeRange.ending.hour || m <= timeRange.ending.minute;
-    (m >= 45 ? (m = 0, h++) : m += 15))
-    {
-        t = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "00" : m);
-        table.set(t, { time: parseTime(t), sum: 0 });
-    }
+/* Chart onjects */
+var timeChart = (function() {
+    var self = {
+        width: 960,
+        height: 540,
+        margin: { top: 30, right: 60, bottom: 30, left: 60 },
+        padding: { top: 20, right: 20, bottom: 20, left: 20 },
+        duration: 420,
+        uiDuration: 70
+    };
 
-var selector = chart.append("g")
-    .attr("class", "selector")
-    .attr("transform", "translate(0,0)")
-    .attr("opacity", 0);
+    self.init = function() {
+        // Create chart elements
+        self.svgElement = d3.select("svg")
+            .attr("preserveAspectRatio", "xMidYMid meet")
+            .attr("viewBox", "0 0 "+self.width+" "+self.height);
+        self.chart = self.svgElement.append("g")
+            .attr("transform", "translate("+self.margin.left+","+self.margin.top+")");
 
-selector.append("line")
-    .attr("x1", "0")
-    .attr("x2", "0")
-    .attr("y1", "0")
-    .attr("y2", height)
-    .attr("stroke", "white")
-    .attr("stroke-width", "1px")
-    .attr("style", "pointer-events: none");
+        self.width -= self.margin.left + self.margin.right;
+        self.height -= self.margin.top + self.margin.bottom;
 
-var tooltip = chart.append("g")
-    .attr("class", "tooltip")
-    .attr("transform", "translate(20,20)");
+        self.x = d3.scaleTime().range([0, self.width]);
+        self.y = d3.scaleLinear().range([self.height, 0]);
 
-tooltip.append("text")
-    .attr("class", "time-field")
-    .attr("fill", "#9e9e9e")
-    .attr("font-size", "12px");
+        self.graphArea = self.chart.append("g")
+            .attr("class", "graph")
+            .attr("transform", "translate(0,"+(-self.height/2)+")");
 
-tooltip.append("text")
-    .attr("class", "value-field")
-    .attr("y", "24")
-    .attr("font-size", "24px");
+        self.xAxis = d3.axisBottom().scale(self.x);
+        self.yAxis = d3.axisLeft().scale(self.y);
 
-chart.append("g")
-    .attr("class", "tooltip")
-    .attr("transform", "translate("+(width-20)+",20)")
-    .append("text")
-    .attr("class", "series-field")
-    .attr("text-anchor", "end")
-    .attr("fill", "#9e9e9e")
-    .attr("font-size", "12px");
+        self.selector = self.chart.append("g")
+            .attr("class", "selector")
+            .attr("transform", "translate(0,0)")
+            .attr("opacity", 0);
 
-d3.csv("data/105-2/station-time.csv", function(data) {
-    entries = data;
-    series = d3.nest()
-                .key(function(d) { return d.station; })
-                .map(entries).keys();
+        self.selector.append("line")
+            .attr("x1", "0")
+            .attr("x2", "0")
+            .attr("y1", "0")
+            .attr("y2", self.height)
+            .attr("stroke", "white")
+            .attr("stroke-width", "1px")
+            .attr("style", "pointer-events: none");
 
-    d3.nest()
-        .key(function(d) { return d.time; })
-        .entries(entries)
-        .forEach(function(t) {
-            i = table.get(t.key);
-            t.values.forEach(function(e) {
-                i[e.station] = +e.count;
-                i.sum += +e.count;
-            });
-            table.set(t.key, i);
-        });
+        self.tooltip = {};
 
-    table = table.values();
+        var tooltipElement = self.chart.append("g")
+            .attr("class", "tooltip")
+            .attr("transform", "translate(20,20)");
 
-    x.domain(d3.extent(table, function(d) { return d.time; }));
-    y.domain([0, d3.max(table, function(d) { return d.sum; }) * 1.05]);
+        self.tooltip.time = tooltipElement.append("text")
+            .attr("class", "time-field")
+            .attr("fill", "#9e9e9e")
+            .attr("font-size", "12px");
 
-    stack.keys(series)
-        .value(function(d, key) { return d[key] || 0; })
-        .order(d3.stackOrderInsideOut)
-        .offset(d3.stackOffsetSilhouette);
+        self.tooltip.value = tooltipElement.append("text")
+            .attr("class", "value-field")
+            .attr("y", "24")
+            .attr("font-size", "24px");
 
-    graph.selectAll(".series")
-        .data(stack(table))
-        .enter()
-        .append("g")
-        .attr("class", "series")
-        .append("path")
-        .attr("class", "area")
-        .attr("opacity", 1)
-        .on("mouseover", function(d, i) {
-            graph.selectAll(".series")
-                .transition().duration(uiDuration)
-                .attr("opacity", function(d, j) {
-                    return (j != i) ? 0.9 : 1;
+        tooltipElement = self.chart.append("g")
+            .attr("class", "tooltip")
+            .attr("transform", "translate("+(self.width-20)+",20)");
+
+        self.tooltip.series = tooltipElement.append("text")
+            .attr("class", "series-field")
+            .attr("text-anchor", "end")
+            .attr("fill", "#9e9e9e")
+            .attr("font-size", "12px");
+
+        // Pre-initialize axes
+        self.xAxisElement = self.chart.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0,"+self.height+")");
+
+        self.yAxisElement = self.chart.append("g")
+            .attr("class", "y axis");
+
+        // Visualization helpers
+        self.streamColor = function(i) {
+            var len = self.series.length;
+            var rel = (i - (len / 2));
+            var pos = ((rel > 0 ? 1 : 0) + Math.abs(rel) * 2) / (len + 1);
+            return d3.interpolatePlasma(1 - pos);
+        }
+
+        self.stackedColor = function(i) {
+            return d3.interpolatePlasma(1 - i / (self.series.length - 1));
+        }
+    };
+
+    self.initData = function(meta) {
+        // Initialize data-related objects
+        self.table = d3.map();
+        self.stack = d3.stack();
+        self.area = d3.area()
+            .x(function(d) { return self.x(d.data.time); })
+            .y0(function(d) { return self.y(d[0]); })
+            .y1(function(d) { return self.y(d[1]); })
+            .curve(d3.curveMonotoneX);
+
+        // Prefill time slots to correctly plot across time
+        for (var h = meta.startTime.hour, m = meta.startTime.minute;
+            h < meta.endTime.hour || m <= meta.endTime.minute;
+            ((60 - m) <= meta.gap  ? (m = 0, h++) : m += meta.gap))
+        {
+            t = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "00" : m);
+            self.table.set(t, { time: time.parse(t), sum: 0 });
+        }
+
+        d3.csv(meta.dataPath, function(data) {
+            // Extract series first, as stacked graph groups by x-axis (time)
+            self.entries = data;
+            self.series = d3.nest()
+                .key(function(d) { return d[meta.column]; })
+                .map(data).keys();
+
+            // Fill data into preallocated time slots
+            d3.nest()
+                .key(function(d) { return d.time; })
+                .entries(data)
+                .forEach(function(t) {
+                    i = self.table.get(t.key);
+                    t.values.forEach(function(e) {
+                        i[e[meta.column]] = +e.count;
+                        i.sum += +e.count;
+                    });
+                    self.table.set(t.key, i);
                 });
-            d3.select(this)
-                .attr("stroke", "rgba(0,0,0,.33)")
-                .attr("stroke-width", "1px");
-        })
-        .on("mousemove", function(d, i) {
-            var mousex = d3.mouse(this)[0];
-            var invertedx = x.invert(mousex);
-            for (var j in table) {
-                item = table[j];
-                if (Math.abs(item.time - invertedx) <= 450000) {
-                    d3.selectAll(".tooltip")
-                        .attr("visibility", "visible");
-                    d3.select(".tooltip .time-field")
-                        .text(formatTime(item.time) + " @ " + d.key);
-                    d3.selectAll(".tooltip .series-field")
-                        .text("同時段總計 " + item.sum);
-                    d3.selectAll(".tooltip .value-field")
-                        .text(item[d.key] || 0);
-                    selector
-                        .attr("transform", "translate("+mousex+",0)")
-                        .attr("opacity", .87);
-                    break;
-                }
-            }
-        })
-        .on("mouseout", function(d, i) {
-            graph.selectAll(".series")
-                .transition().duration(duration)
-                .ease(d3.easeExpOut)
-                .attr("opacity", 1);
 
-            d3.select(this)
-                .attr("stroke-width", "0px");
-            d3.selectAll(".tooltip")
-                .attr("visibility", "hidden");
-            selector.attr("opacity", 0);
+            // Now the key serve no use for us
+            self.table = self.table.values();
+
+            // Set up new axis scales
+            self.x.domain(d3.extent(self.table, function(d) { return d.time; }));
+            self.y.domain([0, d3.max(self.table, function(d) { return d.sum; }) * 1.05]);
+
+            // Update axes
+            self.xAxisElement.call(self.xAxis);
+            self.yAxisElement.call(self.yAxis);
+
+            // Initialize stacked graphs
+            self.stack.keys(self.series)
+                .value(function(d, key) { return d[key] || 0; });
+
+            // Create series
+            self.graphArea.selectAll(".series")
+                .data(self.stack(self.table))
+                .enter()
+                .append("g")
+                .attr("class", "series")
+                .append("path")
+                .attr("class", "area")
+                .attr("opacity", 1)
+                .on("mouseover", self.onSeriesMouseOver)
+                .on("mousemove", self.onSeriesMouseMove)
+                .on("mouseout", self.onSeriesMouseLeave);
+
+            self.streamgraph();
         });
+    };
 
-    chart.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0,"+height+")")
-        .call(xAxis);
+    self.onSeriesMouseOver = function(d, i) {
+        self.graphArea.selectAll(".series")
+            .transition().duration(self.uiDuration)
+            .attr("opacity", function(d, j) {
+                return (j != i) ? 0.9 : 1;
+            });
+        d3.select(this)
+            .attr("stroke", "rgba(0,0,0,.33)")
+            .attr("stroke-width", "1px");
+    };
 
-    chart.append("g")
-        .attr("class", "y axis")
-        .call(yAxis);
+    self.onSeriesMouseMove = function(d, i) {
+        var mousex = d3.mouse(this)[0];
+        var invertedx = self.x.invert(mousex);
+        for (var j in self.table) {
+            item = self.table[j];
+            // Find nearest item to display
+            if (Math.abs(item.time - invertedx) <= 450000) {
+                // Make all tooltip fields visible
+                d3.selectAll(".tooltip")
+                    .attr("visibility", "visible");
 
-    streamgraph();
-    duration = 420;
+                // Fill tooltips wirh values
+                self.tooltip.time.text(time.format(item.time) + " @ " + d.key);
+                self.tooltip.series.text("同時段總計 " + item.sum);
+                self.tooltip.value.text(item[d.key] || 0);
+                self.selector
+                    .attr("transform", "translate("+mousex+",0)")
+                    .attr("opacity", .87);
+                break;
+            }
+        }
+    };
+
+    self.onSeriesMouseLeave = function(d, i) {
+        // Restore visual effects
+        self.graphArea.selectAll(".series")
+            .transition().duration(self.duration)
+            .ease(d3.easeExpOut)
+            .attr("opacity", 1);
+
+        d3.select(this)
+            .attr("stroke-width", "0px");
+
+        d3.selectAll(".tooltip")
+            .attr("visibility", "hidden");
+
+        self.selector.attr("opacity", 0);
+    };
+
+    self.streamgraph = function(duration) {
+        duration = duration || self.duration;
+
+        self.stack.order(d3.stackOrderInsideOut)
+            .offset(d3.stackOffsetSilhouette);
+
+        self.graphArea.transition().duration(duration)
+            .attr("transform", "translate(0,"+(-self.height/2)+")");
+
+        self.graphArea.selectAll(".series")
+            .data(self.stack(self.table))
+            .transition().duration(duration)
+            .ease(d3.easeCubic)
+            .select(".area")
+            .attr("d", self.area)
+            .style("fill", function(d) { return self.streamColor(d.index); });
+    };
+
+    self.stackedArea = function(duration) {
+        duration = duration || self.duration;
+
+        self.stack.order(d3.stackOrderDescending)
+            .offset(d3.stackOffsetNone);
+
+        self.graphArea.transition().duration(duration)
+            .attr("transform", "translate(0,0)");
+
+        self.graphArea.selectAll(".series")
+            .data(self.stack(self.table))
+            .transition().duration(duration)
+            .ease(d3.easeCubic)
+            .select(".area")
+            .attr("d", self.area)
+            .style("fill", function(d) { return self.stackedColor(d.index); })
+    };
+
+    return self;
+})();
+
+timeChart.init();
+timeChart.initData({
+    dataPath: "data/105-2/station-time.csv",
+    startTime: { hour: 9, minute: 30 },
+    endTime: { hour: 20, minute: 0 },
+    gap: 15, column: "station"
 });
 
-function streamgraph() {
-    stack.order(d3.stackOrderInsideOut)
-        .offset(d3.stackOffsetSilhouette);
-
-    graph.transition().duration(duration)
-        .attr("transform", "translate(0,"+(-height/2)+")");
-
-    graph.selectAll(".series")
-        .data(stack(table))
-        .transition().duration(duration)
-        .ease(d3.easeCubic)
-        .select(".area")
-        .attr("d", area)
-        .style("fill", function(d) { return color.centered(d.index); })
-}
-
-function stackedArea() {
-    stack.order(d3.stackOrderDescending)
-        .offset(d3.stackOffsetNone);
-
-    graph.transition().duration(duration)
-        .attr("transform", "translate(0,0)");
-
-    graph.selectAll(".series")
-        .data(stack(table))
-        .transition().duration(duration)
-        .ease(d3.easeCubic)
-        .select(".area")
-        .attr("d", area)
-        .style("fill", function(d) { return color.stacked(d.index); })
-}
-
 var toggle = false;
-graph.on("click", function() {
+timeChart.graphArea.on("click", function() {
     toggle = !toggle;
-    if (toggle) stackedArea(); else streamgraph();
-    d3.select(".hint").attr("visibility", "hidden");
+    if (toggle) timeChart.stackedArea(); else timeChart.streamgraph();
 });
