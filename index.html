@@ -22,9 +22,9 @@
         <h1>105-2 NTUSA Election</h1>
     </header>
     <nav>
-        <a onclick="byStation()" href="#">投票所</a>
-        <a onclick="byCollege()" href="#">學院</a>
-        <a onclick="byStanding()" href="#">屆數</a>
+        <a onclick="showData('105-2', 'station')" href="#">投票所</a>
+        <a onclick="showData('105-2', 'college')" href="#">學院</a>
+        <a onclick="showData('105-2', 'standing')" href="#">學制</a>
     </nav>
     <div class="chart">
         <svg></svg>
@@ -33,66 +33,18 @@
         <p>統計數據包含合辦選舉，僅供參考；實際投票時間與人數因網路狀況可能有所出入。</p>
     </footer>
     <script src="chart.js"></script>
+    <script src="index.js"></script>
     <script>
     timeChart.init();
-
-    function byStation() {
-        timeChart.initData({
-            dataPath: "data/105-2/station-time.csv",
-            startTime: { hour: 9, minute: 30 },
-            endTime: { hour: 20, minute: 0 },
-            gap: 15, column: function(d) { return d.station }
-        });
-    }
-
-    function byCollege() {
-        var college = {
-            labels: ['文學院', '理學院', '社會科學院', '醫學院', '工學院', '生農學院', '管理學院', '公衛學院', '電機資訊學院', '法律學院', '生命科學院'],
-            colors: ["#9e9e9e","#ffea00","#3f51b5","#4caf50","#ff9800","#ffee58","#607d8b","#f44336","#2196f3","#9c27b0","#00bcd4"],
-            id: ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B']
-        }
-
-        function coloring(d) {
-            return college.colors[college.labels.indexOf(d.key)];
-        }
-
-        timeChart.initData({
-            dataPath: "data/105-2/college-time.csv",
-            startTime: { hour: 9, minute: 30 },
-            endTime: { hour: 20, minute: 0 },
-            gap: 15, column: function(d) { return college.labels[college.id.indexOf(d.college)] },
-            colors: {
-                stream: coloring, stacked: coloring
-            }
-        });
-    }
-
-    function byStanding() {
-        var thisYear = 105;
-        var shades = ["#aed581", "#9ccc65", "#8bc34a", "#4caf50", "#43a047", "#388e3c", "#2e7d32"];
-        var otherColors = { "R": "#00bcd4", "D": "#0097a7", "P": "#009688", "T": "#cddc39" }
-
-        function coloring(d) {
-            if (d.key.charAt(0) == 'B') {
-                var year = +(d.key.substr(1));
-                year = Math.min(shades.length - 1, thisYear - ((year < 49 ? 100 : 0) + year));
-                return shades[year];
-            }
-            else return otherColors[d.key];
-        }
-
-        timeChart.initData({
-            dataPath: "data/105-2/standing-time.csv",
-            startTime: { hour: 9, minute: 30 },
-            endTime: { hour: 20, minute: 0 },
-            gap: 15, column: function(d) { return d.standing },
-            colors: {
-                stream: coloring, stacked: coloring
-            }
-        });
-    }
-
-    byStanding();
+    showData('105-2', 'college');
+    </script>
+    <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-46787322-2', 'auto');
+        ga('send', 'pageview');
     </script>
     <!-- (C) RSChiang / NTUOSC 2017. https://ntuosc.org -->
 </body>
