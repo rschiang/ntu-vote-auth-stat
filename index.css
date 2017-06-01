@@ -35,3 +35,39 @@ svg {
     width: 100%;
     height: 100%;
 }
+
+svg text {
+    font-family: Lato, Source Han Sans, sans-serif;
+}
+
+svg .graph .area {
+    transition: stroke 0.07s ease, opacity 0.07s ease;
+}
+
+svg .graph.active .area {
+    opacity: .9;
+}
+
+svg .graph.active .area:hover {
+    opacity: 1;
+    stroke: 1px rgba(0, 0, 0, .33) solid;
+}
+
+svg .selector {
+    transition: opacity 0.07s ease;
+    opacity: 0;
+}
+
+svg .selector.visible {
+    opacity: .87;
+}
+
+svg .tooltip text {
+    fill: #9e9e9e;
+    font-size: 12px;
+}
+
+svg .tooltip .value-field {
+    fill: #212121;
+    font-size: 24px;
+}

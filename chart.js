@@ -42,8 +42,7 @@ var timeChart = (function() {
 
         self.selector = self.chart.append("g")
             .attr("class", "selector")
-            .attr("transform", "translate(0,0)")
-            .attr("opacity", 0);
+            .attr("transform", "translate(0,0)");
 
         self.selector.append("line")
             .attr("x1", "0")
@@ -61,14 +60,11 @@ var timeChart = (function() {
             .attr("transform", "translate(20,20)");
 
         self.tooltip.time = tooltipElement.append("text")
-            .attr("class", "time-field")
-            .attr("fill", "#9e9e9e")
-            .attr("font-size", "12px");
+            .attr("class", "time-field");
 
         self.tooltip.value = tooltipElement.append("text")
             .attr("class", "value-field")
-            .attr("y", "24")
-            .attr("font-size", "24px");
+            .attr("y", "24");
 
         tooltipElement = self.chart.append("g")
             .attr("class", "tooltip")
@@ -76,9 +72,7 @@ var timeChart = (function() {
 
         self.tooltip.series = tooltipElement.append("text")
             .attr("class", "series-field")
-            .attr("text-anchor", "end")
-            .attr("fill", "#9e9e9e")
-            .attr("font-size", "12px");
+            .attr("text-anchor", "end");
 
         // Pre-initialize axes
         self.xAxisElement = self.chart.append("g")
@@ -186,14 +180,7 @@ var timeChart = (function() {
     };
 
     self.onSeriesMouseOver = function(d, i) {
-        self.graphArea.selectAll(".series")
-            .transition().duration(self.uiDuration)
-            .attr("opacity", function(d, j) {
-                return (j != i) ? 0.9 : 1;
-            });
-        d3.select(this)
-            .attr("stroke", "rgba(0,0,0,.33)")
-            .attr("stroke-width", "1px");
+        self.graphArea.attr("class", "graph active");
     };
 
     self.onSeriesMouseMove = function(d, i) {
@@ -213,7 +200,7 @@ var timeChart = (function() {
                 self.tooltip.value.text(item[d.key] || 0);
                 self.selector
                     .attr("transform", "translate("+mousex+",0)")
-                    .attr("opacity", .87);
+                    .attr("class", "selector visible");
                 break;
             }
         }
@@ -221,18 +208,12 @@ var timeChart = (function() {
 
     self.onSeriesMouseLeave = function(d, i) {
         // Restore visual effects
-        self.graphArea.selectAll(".series")
-            .transition().duration(self.duration)
-            .ease(d3.easeExpOut)
-            .attr("opacity", 1);
-
-        d3.select(this)
-            .attr("stroke-width", "0px");
+        self.graphArea.attr("class", "graph");
 
         d3.selectAll(".tooltip")
             .attr("visibility", "hidden");
 
-        self.selector.attr("opacity", 0);
+        self.selector.attr("class", "selector");
     };
 
     self.streamgraph = function(duration) {
