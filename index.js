@@ -61,6 +61,12 @@ var meta = {
         gap: 15,
         dimensions: ['station', 'college', 'standing']
     },
+    "105-1": {
+        startTime: { hour: 9, minute: 30 },
+        endTime: { hour: 18, minute: 30 },
+        gap: 15,
+        dimensions: ['station', 'college', 'standing']
+    },
     "105-2": {
         startTime: { hour: 9, minute: 30 },
         endTime: { hour: 20, minute: 0 },
