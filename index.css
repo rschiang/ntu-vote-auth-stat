@@ -26,6 +26,16 @@ header {
     font-weight: 600;
 }
 
+nav.semesters {
+    float: right;
+    text-align: right;
+}
+
+nav .active {
+    color: #212121;
+    text-decoration: none;
+}
+
 .chart {
     max-width: 68em;
     margin: auto;
