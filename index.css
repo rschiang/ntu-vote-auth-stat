@@ -26,7 +26,7 @@ header {
     font-weight: 600;
 }
 
-nav.semesters {
+nav.semesters, nav.dimensions {
     float: right;
     text-align: right;
 }
@@ -39,6 +39,10 @@ nav .active {
 .chart {
     max-width: 68em;
     margin: auto;
+}
+
+.chart .tip {
+    color: #9e9e9e;
 }
 
 svg {
