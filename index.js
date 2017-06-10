@@ -75,26 +75,87 @@ var meta = {
     }
 };
 
-function showData(semester, dimension) {
-    var options = {
-        dataPath: "data/"+semester+"/"+dimension+"-time.csv",
-        startTime: meta[semester].startTime,
-        endTime: meta[semester].endTime,
-        gap: meta[semester].gap
+// Store page states
+var pageState = (function() {
+    var self = {
+        semester: '105-2',
+        dimension: 'station'
+    };
+
+    self.setSemester = function(semester) {
+        self.semester = semester;
+
+        var dimensions = meta[self.semester].dimensions;
+        if (dimensions.indexOf(self.dimension) < 0)
+            self.dimension = dimensions[0];
+
+        d3.selectAll('nav.dimensions a')
+            .style('display', function() {
+                return (dimensions.indexOf(this.getAttribute('data-dimension')) < 0) ? 'none' : null;
+            });
+
+        self.updateActiveLinks();
+        self.showData();
+    };
+
+    self.setDimension = function(dimension) {
+        self.dimension = dimension;
+        self.updateActiveLinks();
+        self.showData();
+    };
+
+    self.updateActiveLinks = function() {
+        d3.selectAll('nav.semesters a')
+            .classed('active', function() {
+                return this.getAttribute('data-semester') == self.semester;
+            });
+
+        d3.selectAll('nav.dimensions a')
+            .classed('active', function() {
+                return this.getAttribute('data-dimension') == self.dimension;
+            });
     }
 
-    if (dimension == 'station')
-        options.column = function(d) { return d.station; };
-    else if (dimension == 'college') {
-        options.column = college.columnKey;
-        options.colors = { stream: college.coloring, stacked: college.coloring };
-    }
-    else if (dimension == 'standing') {
-        var year = +(semester.substr(0, 3));
-        var coloring = function(d) { return standing.coloring(d, year); };
-        options.column = standing.columnKey;
-        options.colors = { stream: coloring, stacked: coloring };
-    }
+    self.showData = function() {
+        var semester = self.semester;
+        var dimension = self.dimension;
+        var options = {
+            dataPath: "data/"+semester+"/"+dimension+"-time.csv",
+            startTime: meta[semester].startTime,
+            endTime: meta[semester].endTime,
+            gap: meta[semester].gap
+        }
 
-    return timeChart.initData(options);
-}
+        if (dimension == 'station')
+            options.column = function(d) { return d.station; };
+        else if (dimension == 'college') {
+            options.column = college.columnKey;
+            options.colors = { stream: college.coloring, stacked: college.coloring };
+        }
+        else if (dimension == 'standing') {
+            var year = +(semester.substr(0, 3));
+            var coloring = function(d) { return standing.coloring(d, year); };
+            options.column = standing.columnKey;
+            options.colors = { stream: coloring, stacked: coloring };
+        }
+
+        return timeChart.initData(options);
+    };
+
+    // Initialize links
+    self.updateActiveLinks();
+    d3.selectAll('nav.semesters a')
+        .on('click', function() {
+            self.setSemester(this.getAttribute('data-semester'));
+        });
+
+    d3.selectAll('nav.dimensions a')
+        .on('click', function() {
+            self.setDimension(this.getAttribute('data-dimension'));
+        });
+
+    return self;
+})();
+
+timeChart.init();
+pageState.showData();
