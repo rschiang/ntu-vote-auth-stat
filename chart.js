@@ -284,6 +284,7 @@ var PieChart = function(chartId, filePath, primaryKey, secondaryKey) {
         .attr("viewBox", "0 0 "+self.width+" "+self.height);
 
     self.chart = self.svgElement.append("g")
+        .attr("class", "graph")
         .attr("transform", "translate("+self.width/2+","+self.height/2+")");
 
     d3.csv(filePath, function(data) {
@@ -311,6 +312,7 @@ var PieChart = function(chartId, filePath, primaryKey, secondaryKey) {
             .data(self.pie)
             .enter()
             .append("path")
+            .attr("class", "area")
             .attr("fill", self.colors)
             .attr("d", self.arc)
             .each(function(d) { this._currentAngle = d; })
@@ -319,6 +321,8 @@ var PieChart = function(chartId, filePath, primaryKey, secondaryKey) {
     });
 
     self.onSeriesMouseOver = function(d, i) {
+        self.chart.classed("active", true);
+
         d3.select("#"+chartId+" .tooltip .dimension-field")
             .text(d.data.name);
         d3.select("#"+chartId+" .tooltip .value-field")
@@ -328,6 +332,8 @@ var PieChart = function(chartId, filePath, primaryKey, secondaryKey) {
     };
 
     self.onSeriesMouseLeave = function() {
+        self.chart.classed("active", false);
+
         d3.select("#"+chartId+" .tooltip .dimension-field")
             .text(primaryKey);
         d3.select("#"+chartId+" .tooltip .value-field")
