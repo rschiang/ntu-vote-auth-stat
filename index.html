@@ -28,8 +28,10 @@
         </nav>
         <h1>NTUSA Election Infographic<br />選舉資訊圖表</h1>
     </header>
-    <div class="chart">
+    <div class="chart row" id="time-chart">
         <svg></svg>
+    </div>
+    <div class="row">
         <nav class="dimensions">
             分類：
             <a data-dimension="station" href="#">依投票所</a>
@@ -38,6 +40,17 @@
         </nav>
         <div class="chart-type tip">
             按一下圖例以切換堆疊圖與串流圖
+        </div>
+    </div>
+    <div class="three-up row">
+        <div class="chart" id="college-pie-chart">
+            <svg></svg>
+        </div>
+        <div class="chart" id="station-pie-chart">
+            <svg></svg>
+        </div>
+        <div class="chart" id="standing-pie-chart">
+            <svg></svg>
         </div>
     </div>
     <footer>
