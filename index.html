@@ -34,8 +34,8 @@
     <div class="row">
         <nav class="dimensions">
             分類：
-            <a data-dimension="station" href="#">依投票所</a>
             <a data-dimension="college" href="#">依學院</a>
+            <a data-dimension="station" href="#">依投票所</a>
             <a data-dimension="standing" href="#">依學制</a>
         </nav>
         <div class="chart-type tip">
@@ -43,7 +43,7 @@
         </div>
     </div>
     <div class="three-up row">
-        <div class="pie chart" id="college-pie-chart">
+        <div class="pie chart" id="college-pie-chart" data-dimension="college">
             <svg></svg>
             <div class="tooltip">
                 <div class="dimension-field">學院</div>
@@ -51,7 +51,7 @@
                 <div class="percentage-field"></div>
             </div>
         </div>
-        <div class="pie chart" id="station-pie-chart">
+        <div class="pie chart" id="station-pie-chart" data-dimension="station">
             <svg></svg>
             <div class="tooltip">
                 <div class="dimension-field">投票所</div>
@@ -59,7 +59,7 @@
                 <div class="percentage-field"></div>
             </div>
         </div>
-        <div class="pie chart" id="standing-pie-chart">
+        <div class="pie chart" id="standing-pie-chart" data-dimension="standing">
             <svg></svg>
             <div class="tooltip">
                 <div class="dimension-field">學制</div>
