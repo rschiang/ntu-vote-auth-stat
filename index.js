@@ -150,6 +150,12 @@ var pageState = (function() {
         self.showData();
         self.pieChart.college.initData("data/"+self.semester+"/station-college.csv");
         self.pieChart.station.initData("data/"+self.semester+"/station-college.csv");
+        d3.selectAll(".pie.chart")
+            .datum(function() { return this.dataset; })
+            .on("click", function(d) {
+                if (meta[self.semester].dimensions.indexOf(d.dimension) >= 0)
+                    self.setDimension(d.dimension);
+            });
 
         var hasStanding = (dimensions.indexOf("standing") >= 0);
         if (hasStanding)
@@ -158,6 +164,8 @@ var pageState = (function() {
     };
 
     self.setDimension = function(dimension) {
+
+
         self.dimension = dimension;
         self.updateActiveLinks();
         self.showData();
