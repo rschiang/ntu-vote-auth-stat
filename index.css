@@ -15,7 +15,7 @@ body, html {
     font-family: Lato, Source Han Sans, sans-serif;
 }
 
-header, footer, .row {
+header, .row {
     max-width: 68em;
     margin: auto;
     padding: 0 1em;
@@ -143,4 +143,29 @@ svg .tooltip .value-field {
 .pie.chart .value-field {
     font-size: 2em;
     line-height: 2.5rem;
+}
+
+footer {
+    background: #f5f5f5;
+    margin: 1em 0 0;
+    padding: .5em 0;
+    text-align: center;
+}
+
+footer p, p.footnote {
+    color: #bdbdbd;
+    font-size: .8rem;
+    text-align: center;
+}
+
+.ntuosc-logo {
+    display: block;
+    width: 12em;
+    margin: .5em auto;
+    transition: filter 280ms ease;
+    filter: grayscale(100%);
+}
+
+.ntuosc-logo:hover {
+    filter: grayscale(0%);
 }
