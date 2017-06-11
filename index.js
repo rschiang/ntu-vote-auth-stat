@@ -15,6 +15,10 @@ var college = (function() {
         return self.labels[(i < 0) ? self.labels.length - 1 : i];
     };
 
+    self.sorting = function(a, b) {
+        return self.labels.indexOf(a.key) - self.labels.indexOf(b.key);
+    };
+
     return self;
 })();
 
@@ -30,11 +34,19 @@ var standing = (function() {
         shades: ["#aed581", "#9ccc65", "#8bc34a", "#4caf50", "#43a047", "#388e3c", "#2e7d32"]
     }
 
-    self.coloring = function(d, thisYear) {
-        var match = /B(\d{2})/g.exec(d.key);
+    self.matchYear = function(s) {
+        var match = /B(\d{2})/g.exec(s);
         if (match) {
             var year = +(match[1]);
-            year = Math.min(self.shades.length - 1, thisYear - ((year < 49 ? 100 : 0) + year));
+            return year + ((year < 49) ? 100 : 0);
+        }
+        else return -1;
+    }
+
+    self.coloring = function(d, thisYear) {
+        var year = self.matchYear(d.key);
+        if (year >= 0) {
+            year = Math.min(self.shades.length - 1, thisYear - year);
             return self.shades[year];
         }
         else return self.colors[self.labels.indexOf(d.key)];
@@ -42,6 +54,20 @@ var standing = (function() {
 
     self.columnKey = function(d) {
         return (d.standing.length > 1 && d.standing.charAt(0) == 'B') ? ('大學部 ' + d.standing) : self.labels[self.ids.indexOf(d.standing)];
+    };
+
+    self.sorting = function(a, b) {
+        var yearA = self.matchYear(a.key);
+        var yearB = self.matchYear(b.key);
+
+        if (yearA >= 0)
+            if (yearB >= 0)
+                return yearB - yearA; // Descending
+            else return -1;
+        else
+            if (yearB >= 0)
+                return 1;
+            else return self.labels.indexOf(b.key) - self.labels.indexOf(a.key);
     };
 
     return self;
@@ -92,7 +118,8 @@ var pageState = (function() {
         college: PieChart({
             selector: "#college-pie-chart", dimensionName: "學院",
             dimension: college.columnKey,
-            colors: function(d) { return college.coloring(d.data); }
+            colors: function(d) { return college.coloring(d.data); },
+            sorting: college.sorting
         }),
         station: PieChart({
             selector: "#station-pie-chart", dimensionName: "投票所",
@@ -101,7 +128,8 @@ var pageState = (function() {
         standing: PieChart({
             selector: "#standing-pie-chart", dimensionName: "學制",
             dimension: standing.columnKey,
-            colors: (function(d) { return standing.coloring(d.data, self.year); })
+            colors: (function(d) { return standing.coloring(d.data, self.year); }),
+            sorting: standing.sorting
         }),
     }
 
