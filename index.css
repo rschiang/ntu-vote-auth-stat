@@ -56,12 +56,17 @@ nav .active {
     }
 
     .three-up.row .chart {
-        width: 31.86%;
-        margin: 2em .735%;
+        width: 29.41%;
+        margin: 2em 2.941%;
         float: left;
     }
 
+    .three-up.row .chart:first-child {
+        margin-left: 0;
+    }
+
     .three-up.row .chart:last-child {
+        margin-right: 0;
         float: right;
     }
 
@@ -115,4 +120,22 @@ svg .tooltip text {
 svg .tooltip .value-field {
     fill: #212121;
     font-size: 24px;
+}
+
+.pie.chart {
+    position: relative;
+}
+
+.pie.chart .tooltip {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    line-height: 1.25rem;
+    transform: translateY(-2.75rem);
+    text-align: center;
+}
+
+.pie.chart .value-field {
+    font-size: 2em;
+    line-height: 2.5rem;
 }

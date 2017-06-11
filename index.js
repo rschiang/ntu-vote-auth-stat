@@ -160,4 +160,6 @@ var pageState = (function() {
 timeChart.init();
 pageState.showData();
 
-var pieChart = PieChart("#college-pie-chart svg", "data/105-2/college-standing.csv", "college", "standing");
+var pieChart1 = PieChart("college-pie-chart", "data/105-2/college-standing.csv", "college", "standing");
+var pieChart2 = PieChart("station-pie-chart", "data/105-2/station-college.csv", "station", "standing");
+var pieChart3 = PieChart("standing-pie-chart", "data/105-2/college-standing.csv", "standing", "college");
