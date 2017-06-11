@@ -1,9 +1,9 @@
 // Shared metadata and coloring styles
 var college = (function() {
     var self = {
-        labels: ['文學院', '理學院', '社會科學院', '醫學院', '工學院', '生物資源暨農學院', '管理學院', '公衛學院', '電機資訊學院', '法律學院', '生命科學院'],
-        colors: ["#9e9e9e","#ffea00","#3f51b5","#4caf50","#ff9800","#ffee58","#607d8b","#f44336","#2196f3","#9c27b0","#00bcd4"],
-        ids: ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B']
+        labels: ['文學院', '理學院', '社會科學院', '醫學院', '工學院', '生物資源暨農學院', '管理學院', '公衛學院', '電機資訊學院', '法律學院', '生命科學院', '共同教育中心'],
+        colors: ["#9e9e9e","#ffea00","#3f51b5","#4caf50","#ff9800","#ffee58","#607d8b","#f44336","#2196f3","#9c27b0","#00bcd4", "#8d6e63"],
+        ids: ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'H']
     };
 
     self.coloring = function(d) {
@@ -11,7 +11,8 @@ var college = (function() {
     };
 
     self.columnKey = function(d) {
-        return self.labels[self.ids.indexOf(d.college)];
+        var i = self.ids.indexOf(d.college);
+        return self.labels[(i < 0) ? self.labels.length - 1 : i];
     };
 
     return self;
