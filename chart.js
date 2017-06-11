@@ -261,16 +261,38 @@ var timeChart = (function() {
         }
     }
 
+    self.init();
     return self;
 })();
 
-var PieChart = function(chartId, filePath, primaryKey, secondaryKey) {
+var PieChart = function(options) {
     var self = {
         width: 296, height: 296,
-        radius: 148, innerRadius: 99
+        radius: 148, innerRadius: 99,
+        enabled: true,
+        dimensionKey: options.dimension,
+        dimensionName: options.dimensionName
     };
 
-    self.colors = function(d, i) { return d3.interpolatePlasma(1 - i / (self.series.length - 1));; };
+    self.chart = d3.select(options.selector);
+
+    self.svgElement = self.chart.select("svg")
+        .attr("preserveAspectRatio", "xMidYMid meet")
+        .attr("viewBox", "0 0 "+self.width+" "+self.height);
+
+    self.graphArea = self.svgElement.append("g")
+        .attr("class", "graph")
+        .attr("transform", "translate("+self.width/2+","+self.height/2+")");
+
+    self.tooltipElement = self.chart.select(".tooltip");
+
+    self.tooltip = {
+        dimension: self.tooltipElement.select(".dimension-field"),
+        value: self.tooltipElement.select(".value-field"),
+        percentage: self.tooltipElement.select(".percentage-field")
+    };
+
+    self.percentageFormatter = d3.format(".1%");
 
     self.pie = d3.pie()
         .value(function(d) { return d.sum; });
@@ -279,68 +301,75 @@ var PieChart = function(chartId, filePath, primaryKey, secondaryKey) {
         .innerRadius(self.innerRadius)
         .outerRadius(self.radius);
 
-    self.svgElement = d3.select("#"+chartId+" svg")
-        .attr("preserveAspectRatio", "xMidYMid meet")
-        .attr("viewBox", "0 0 "+self.width+" "+self.height);
+    self.defaultColors = function(d, i) {
+        return d3.interpolatePlasma(1 - i / (self.series.length - 1));
+    };
 
-    self.chart = self.svgElement.append("g")
-        .attr("class", "graph")
-        .attr("transform", "translate("+self.width/2+","+self.height/2+")");
+    self.colors = options.colors || self.defaultColors;
 
-    d3.csv(filePath, function(data) {
-        self.series = [];
-        self.total = 0;
+    self.initData = function(filePath) {
+        d3.csv(filePath, function(data) {
+            self.series = [];
+            self.total = 0;
 
-        d3.nest()
-            .key(function(d) { return d[primaryKey]; })
-            .entries(data)
-            .forEach(function(t) {
-                var i = { name: t.key, sum: 0 };
-                t.values.forEach(function(e) {
-                    var value = +e.count;
-                    i[e[secondaryKey]] = value;
-                    i.sum += value;
-                    self.total += value;
+            d3.nest()
+                .key(self.dimensionKey)
+                .entries(data)
+                .forEach(function(t) {
+                    var i = { key: t.key, sum: 0 };
+                    t.values.forEach(function(e) {
+                        var value = +e.count;
+                        i.sum += value;
+                        self.total += value;
+                    });
+                    self.series.push(i);
                 });
-                self.series.push(i);
-            });
 
-        self.series.sort(function(a, b) { return b.sum - a.sum; });
+            self.series.sort(function(a, b) { return b.sum - a.sum; });
 
-        self.chart.datum(self.series)
-            .selectAll("path")
-            .data(self.pie)
-            .enter()
-            .append("path")
-            .attr("class", "area")
-            .attr("fill", self.colors)
-            .attr("d", self.arc)
-            .each(function(d) { this._currentAngle = d; })
-            .on("mouseover", self.onSeriesMouseOver)
-            .on("mouseleave", self.onSeriesMouseLeave);
-    });
+            self.graphArea.datum(self.series)
+                .selectAll("path")
+                .data(self.pie)
+                .enter()
+                .append("path")
+                .attr("class", "area")
+                .attr("fill", self.colors)
+                .attr("d", self.arc)
+                .each(function(d) { this._currentAngle = d; })
+                .on("mouseover", self.onSeriesMouseOver)
+                .on("mouseleave", self.onSeriesMouseLeave);
+
+            self.onSeriesMouseLeave();
+        });
+    }
 
     self.onSeriesMouseOver = function(d, i) {
-        self.chart.classed("active", true);
-
-        d3.select("#"+chartId+" .tooltip .dimension-field")
-            .text(d.data.name);
-        d3.select("#"+chartId+" .tooltip .value-field")
-            .text(d.value);
-        d3.select("#"+chartId+" .tooltip .percentage-field")
-            .text(d3.format(".1%")(d.value / self.total));
+        if (!self.enabled) return;
+        self.graphArea.classed("active", true);
+        self.tooltip.dimension.text(d.data.key);
+        self.tooltip.value.text(d.value);
+        self.tooltip.percentage.text(self.percentageFormatter(d.value / self.total));
     };
 
     self.onSeriesMouseLeave = function() {
-        self.chart.classed("active", false);
-
-        d3.select("#"+chartId+" .tooltip .dimension-field")
-            .text(primaryKey);
-        d3.select("#"+chartId+" .tooltip .value-field")
-            .text(self.total);
-        d3.select("#"+chartId+" .tooltip .percentage-field")
-            .text("0w0");
+        if (!self.enabled) return;
+        self.graphArea.classed("active", false);
+        self.tooltip.dimension.text(self.dimensionName);
+        self.tooltip.value.text(self.total);
+        self.tooltip.percentage.text("");
     };
+
+    self.setEnabled = function(enabled) {
+        self.enabled = enabled;
+        self.graphArea.classed("disabled", !enabled);
+        if (enabled)
+            self.onSeriesMouseLeave();
+        else {
+            self.tooltip.dimension.text(self.dimensionName);
+            self.tooltip.value.text("N/A");
+            self.tooltip.percentage.text("沒有資料");
+        }
+    }
 
     return self;
 };

@@ -17,6 +17,10 @@ var college = (function() {
     return self;
 })();
 
+var station = {
+    columnKey: function(d) { return d.station; }
+};
+
 var standing = (function() {
     var self = {
         labels: ['大學部', '研究生', '碩士生', '博士生', '交換/訪問生', '在職/進修生'],
@@ -78,12 +82,31 @@ var meta = {
 // Store page states
 var pageState = (function() {
     var self = {
+        year: 105,
         semester: '105-2',
         dimension: 'station'
     };
 
+    self.pieChart = {
+        college: PieChart({
+            selector: "#college-pie-chart", dimensionName: "學院",
+            dimension: college.columnKey,
+            colors: function(d) { return college.coloring(d.data); }
+        }),
+        station: PieChart({
+            selector: "#station-pie-chart", dimensionName: "投票所",
+            dimension: station.columnKey
+        }),
+        standing: PieChart({
+            selector: "#standing-pie-chart", dimensionName: "學制",
+            dimension: standing.columnKey,
+            colors: (function(d) { return standing.coloring(d.data, self.year); })
+        }),
+    }
+
     self.setSemester = function(semester) {
         self.semester = semester;
+        self.year = +(semester.substr(0, 3));
 
         var dimensions = meta[self.semester].dimensions;
         if (dimensions.indexOf(self.dimension) < 0)
@@ -96,6 +119,13 @@ var pageState = (function() {
 
         self.updateActiveLinks();
         self.showData();
+        self.pieChart.college.initData("data/"+self.semester+"/station-college.csv");
+        self.pieChart.station.initData("data/"+self.semester+"/station-college.csv");
+
+        var hasStanding = (dimensions.indexOf("standing") >= 0);
+        if (hasStanding)
+            self.pieChart.standing.initData("data/"+self.semester+"/station-standing.csv");
+        self.pieChart.standing.setEnabled(hasStanding);
     };
 
     self.setDimension = function(dimension) {
@@ -127,14 +157,13 @@ var pageState = (function() {
         }
 
         if (dimension == 'station')
-            options.column = function(d) { return d.station; };
+            options.column = station.columnKey;
         else if (dimension == 'college') {
             options.column = college.columnKey;
             options.colors = { stream: college.coloring, stacked: college.coloring };
         }
         else if (dimension == 'standing') {
-            var year = +(semester.substr(0, 3));
-            var coloring = function(d) { return standing.coloring(d, year); };
+            var coloring = function(d) { return standing.coloring(d, self.year); };
             options.column = standing.columnKey;
             options.colors = { stream: coloring, stacked: coloring };
         }
@@ -154,12 +183,6 @@ var pageState = (function() {
             self.setDimension(this.getAttribute('data-dimension'));
         });
 
+    self.setSemester(self.semester);
     return self;
 })();
-
-timeChart.init();
-pageState.showData();
-
-var pieChart1 = PieChart("college-pie-chart", "data/105-2/college-standing.csv", "college", "standing");
-var pieChart2 = PieChart("station-pie-chart", "data/105-2/station-college.csv", "station", "standing");
-var pieChart3 = PieChart("standing-pie-chart", "data/105-2/college-standing.csv", "standing", "college");
