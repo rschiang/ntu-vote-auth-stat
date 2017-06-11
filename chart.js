@@ -264,7 +264,7 @@ var timeChart = (function() {
     return self;
 })();
 
-var PieChart = function(svgSelector, filePath, primaryKey, secondaryKey) {
+var PieChart = function(chartId, filePath, primaryKey, secondaryKey) {
     var self = {
         width: 296, height: 296,
         radius: 148, innerRadius: 99
@@ -279,7 +279,7 @@ var PieChart = function(svgSelector, filePath, primaryKey, secondaryKey) {
         .innerRadius(self.innerRadius)
         .outerRadius(self.radius);
 
-    self.svgElement = d3.select(svgSelector)
+    self.svgElement = d3.select("#"+chartId+" svg")
         .attr("preserveAspectRatio", "xMidYMid meet")
         .attr("viewBox", "0 0 "+self.width+" "+self.height);
 
@@ -287,21 +287,24 @@ var PieChart = function(svgSelector, filePath, primaryKey, secondaryKey) {
         .attr("transform", "translate("+self.width/2+","+self.height/2+")");
 
     d3.csv(filePath, function(data) {
-        var series = [];
+        self.series = [];
+        self.total = 0;
+
         d3.nest()
             .key(function(d) { return d[primaryKey]; })
             .entries(data)
             .forEach(function(t) {
-                var i = { sum: 0 };
+                var i = { name: t.key, sum: 0 };
                 t.values.forEach(function(e) {
-                    i[e[secondaryKey]] = +e.count;
-                    i.sum += +e.count;
+                    var value = +e.count;
+                    i[e[secondaryKey]] = value;
+                    i.sum += value;
+                    self.total += value;
                 });
-                series.push(i);
+                self.series.push(i);
             });
 
-        series.sort(function(a, b) { return b.sum - a.sum; })
-        self.series = series;
+        self.series.sort(function(a, b) { return b.sum - a.sum; });
 
         self.chart.datum(self.series)
             .selectAll("path")
@@ -310,8 +313,28 @@ var PieChart = function(svgSelector, filePath, primaryKey, secondaryKey) {
             .append("path")
             .attr("fill", self.colors)
             .attr("d", self.arc)
-            .each(function(d) { this._currentAngle = d; });
+            .each(function(d) { this._currentAngle = d; })
+            .on("mouseover", self.onSeriesMouseOver)
+            .on("mouseleave", self.onSeriesMouseLeave);
     });
+
+    self.onSeriesMouseOver = function(d, i) {
+        d3.select("#"+chartId+" .tooltip .dimension-field")
+            .text(d.data.name);
+        d3.select("#"+chartId+" .tooltip .value-field")
+            .text(d.value);
+        d3.select("#"+chartId+" .tooltip .percentage-field")
+            .text(d3.format(".1%")(d.value / self.total));
+    };
+
+    self.onSeriesMouseLeave = function() {
+        d3.select("#"+chartId+" .tooltip .dimension-field")
+            .text(primaryKey);
+        d3.select("#"+chartId+" .tooltip .value-field")
+            .text(self.total);
+        d3.select("#"+chartId+" .tooltip .percentage-field")
+            .text("0w0");
+    };
 
     return self;
 };
