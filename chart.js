@@ -293,16 +293,19 @@ var PieChart = function(options) {
     };
 
     self.percentageFormatter = d3.format(".1%");
+    self.keyFunction = function(d) { return d.data.key };
+    self.valueFunction = function(d) { return d.count; };
 
     self.pie = d3.pie()
-        .value(function(d) { return d.count; });
+        .value(self.valueFunction)
+        .sort(null);
 
     self.arc = d3.arc()
         .innerRadius(self.innerRadius)
         .outerRadius(self.radius);
 
     self.defaultColors = function(d, i) {
-        return d3.interpolatePlasma(1 - i / (self.series.length - 1));
+        return d3.interpolatePlasma(1 - i / (self.series.length));
     };
 
     self.colors = options.colors || self.defaultColors;
@@ -333,36 +336,72 @@ var PieChart = function(options) {
 
             series.sort(self.sorting);
 
-            var oldSeries = self.series || series;
+            var oldSeries = self.graphArea.selectAll(".area")
+                .data().map(function(d) { return d.data; });
+
+            if (oldSeries.length == 0)
+                oldSeries = series;
+
             self.series = series;
             self.total = total;
 
+            var was = self.migrateSets(series, oldSeries);
+            var is = self.migrateSets(oldSeries, series);
+
+            // Load series with old values first
             var slice = self.graphArea.selectAll(".area")
-                .data(self.pie(self.series), function(d) { return d.data.key });
+                .data(self.pie(was), self.keyFunction);
 
             slice.enter()
                 .append("path")
-                .attr("fill", self.colors)
                 .attr("class", "area")
+                .attr("fill", self.colors)
                 .on("mouseover", self.onSeriesMouseOver)
                 .on("mouseleave", self.onSeriesMouseLeave)
+                .each(function(d) { this._current = d; });
+
+            // Now load the new values
+            slice = self.graphArea.selectAll(".area")
+                .data(self.pie(is), self.keyFunction);
 
             slice.transition()
                 .duration(self.duration)
+                .attr("fill", self.colors)
                 .attrTween("d", self.onTweenArc);
 
+            // Replace with final data afterwards
+            slice.data(self.pie(self.series), self.keyFunction);
+
             slice.exit()
+                .transition()
+                .delay(self.duration)
+                .duration(0)
                 .remove();
 
             self.onSeriesMouseLeave();
         });
-    }
+    };
+
+    self.migrateSets = function(first, second) {
+        var secondSet = d3.set();
+        second.forEach(function(d) { secondSet.add(d.key); });
+
+        var onlyFirst = first.filter(function(d) { return !secondSet.has(d.key); })
+            .map(function(d) { return { key: d.key, count: 0 }; });
+
+        var merged = d3.merge([ second, onlyFirst ]);
+        merged.sort(self.sorting);
+
+        return merged;
+    };
 
     self.onTweenArc = function(d) {
-        this._current = this._current || d;
         var interpolate = d3.interpolate(this._current, d);
-        this._current = interpolate(0);
-        return function(t) { return self.arc(interpolate(t)) };
+        var _this = this;
+        return function(t) {
+            _this._current = interpolate(t);
+            return self.arc(_this._current);
+        };
     };
 
     self.onSeriesMouseOver = function(d, i) {
