@@ -19,7 +19,7 @@ var timeChart = (function() {
 
     self.init = function() {
         // Create chart elements
-        self.svgElement = d3.select("svg")
+        self.svgElement = d3.select("#time-chart svg")
             .attr("preserveAspectRatio", "xMidYMid meet")
             .attr("viewBox", "0 0 "+self.width+" "+self.height);
         self.chart = self.svgElement.append("g")
@@ -263,3 +263,55 @@ var timeChart = (function() {
 
     return self;
 })();
+
+var PieChart = function(svgSelector, filePath, primaryKey, secondaryKey) {
+    var self = {
+        width: 296, height: 296,
+        radius: 148, innerRadius: 99
+    };
+
+    self.colors = function(d, i) { return d3.interpolatePlasma(1 - i / (self.series.length - 1));; };
+
+    self.pie = d3.pie()
+        .value(function(d) { return d.sum; });
+
+    self.arc = d3.arc()
+        .innerRadius(self.innerRadius)
+        .outerRadius(self.radius);
+
+    self.svgElement = d3.select(svgSelector)
+        .attr("preserveAspectRatio", "xMidYMid meet")
+        .attr("viewBox", "0 0 "+self.width+" "+self.height);
+
+    self.chart = self.svgElement.append("g")
+        .attr("transform", "translate("+self.width/2+","+self.height/2+")");
+
+    d3.csv(filePath, function(data) {
+        var series = [];
+        d3.nest()
+            .key(function(d) { return d[primaryKey]; })
+            .entries(data)
+            .forEach(function(t) {
+                var i = { sum: 0 };
+                t.values.forEach(function(e) {
+                    i[e[secondaryKey]] = +e.count;
+                    i.sum += +e.count;
+                });
+                series.push(i);
+            });
+
+        series.sort(function(a, b) { return b.sum - a.sum; })
+        self.series = series;
+
+        self.chart.datum(self.series)
+            .selectAll("path")
+            .data(self.pie)
+            .enter()
+            .append("path")
+            .attr("fill", self.colors)
+            .attr("d", self.arc)
+            .each(function(d) { this._currentAngle = d; });
+    });
+
+    return self;
+};

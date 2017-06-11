@@ -159,3 +159,5 @@ var pageState = (function() {
 
 timeChart.init();
 pageState.showData();
+
+var pieChart = PieChart("#college-pie-chart svg", "data/105-2/college-standing.csv", "college", "standing");
