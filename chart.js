@@ -295,7 +295,7 @@ var PieChart = function(options) {
     self.percentageFormatter = d3.format(".1%");
 
     self.pie = d3.pie()
-        .value(function(d) { return d.sum; });
+        .value(function(d) { return d.count; });
 
     self.arc = d3.arc()
         .innerRadius(self.innerRadius)
@@ -307,25 +307,35 @@ var PieChart = function(options) {
 
     self.colors = options.colors || self.defaultColors;
 
+    self.defaultSorting = function(a, b) {
+        return b.count - a.count;
+    };
+
+    self.sorting = options.sorting || self.defaultSorting;
+
     self.initData = function(filePath) {
         d3.csv(filePath, function(data) {
-            self.series = [];
-            self.total = 0;
+            var series = [];
+            var total = 0;
 
             d3.nest()
                 .key(self.dimensionKey)
                 .entries(data)
                 .forEach(function(t) {
-                    var i = { key: t.key, sum: 0 };
+                    var i = { key: t.key, count: 0 };
                     t.values.forEach(function(e) {
                         var value = +e.count;
-                        i.sum += value;
-                        self.total += value;
+                        i.count += value;
+                        total += value;
                     });
-                    self.series.push(i);
+                    series.push(i);
                 });
 
-            self.series.sort(function(a, b) { return b.sum - a.sum; });
+            series.sort(self.sorting);
+
+            var oldSeries = self.series || series;
+            self.series = series;
+            self.total = total;
 
             var slice = self.graphArea.selectAll(".area")
                 .data(self.pie(self.series), function(d) { return d.data.key });
