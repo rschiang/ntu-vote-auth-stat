@@ -1,70 +1,78 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
-    <title>臺大開源社：105-2 學生會暨自治組織選舉領票統計</title>
+    <title>臺大開源社：學生會選舉領票資訊圖表</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <meta property="og:title" content="105-2 學生會暨自治組織選舉領票統計">
+    <meta property="og:title" content="臺大學生會選舉領票資訊圖表">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="http://vote.ntuosc.org/statistics/105-2/">
-    <meta property="og:image" content="http://vote.ntuosc.org/statistics/105-2/assets/chart.png">
+    <meta property="og:url" content="http://ntuosc.org/vote-statistics/">
+    <meta property="og:image" content="http://ntuosc.org/vote-statistics/assets/chart.png">
     <meta property="og:site_name" content="臺灣大學開源社">
-    <meta property="og:description" content="開源社負責開發電子投票「嗶卡領票」的身份驗證系統，並針對這次學生代表選舉相關數據做了分析。一起來看看哪個票點最熱門、哪裡又是拓荒前線吧！">
+    <meta property="og:description" content="開源社負責開發電子投票「嗶卡領票」的身份驗證系統，並針對歷次選舉相關數據進行分析整理。一起來看看哪個投票所最熱門、哪裡又是拓荒前線吧！">
 
-    <link rel="stylesheet" href="bower_components/foundation/css/foundation.css">
+    <link rel="stylesheet" href="index.css" type="text/css">
     <link rel="shortcut icon" href="assets/favicon.png" type="image/png">
-    <script src="bower_components/chartjs/Chart.min.js"></script>
-    <script src="index.js"></script>
+    <script src="vendor/d3.v4.min.js"></script>
 </head>
 <body>
-    <div class="row">
-        <div class="large-12 columns">
-            <h1>領票統計</h1>
-            <dl class="sub-nav">
-                <dt>檢視：</dt>
-                <dd class="active"><a href="index.html">累積圖</a></dd>
-                <dd><a href="by_time.html">分布圖</a></dd>
-                <dd><a href="by_station.html">依票所</a></dd>
-                <dd><a href="by_college.html">依學院</a></dd>
-                <dd><a href="by_standing.html">依學制</a></dd>
-            </dl>
-        </div>
+    <header>
+        <nav class="semesters">
+            <a data-semester="103-1" href="#">103-1</a>
+            <a data-semester="103-2" href="#">103-2</a>
+            <a data-semester="104-1" href="#">104-1</a>
+            <a data-semester="105-1" href="#">105-1</a>
+            <a data-semester="105-2" href="#">105-2</a>
+        </nav>
+        <h1>NTUSA Election Infographic<br />選舉資訊圖表</h1>
+    </header>
+    <div class="chart row" id="time-chart">
+        <svg></svg>
     </div>
     <div class="row">
-        <div class="large-12 columns">
-            <canvas id="chart1" width="960" height="640"></canvas>
+        <nav class="dimensions">
+            分類：
+            <a data-dimension="college" href="#">依學院</a>
+            <a data-dimension="station" href="#">依投票所</a>
+            <a data-dimension="standing" href="#">依學制</a>
+        </nav>
+        <div class="chart-type tip">
+            按一下圖例以切換堆疊圖與串流圖
         </div>
     </div>
-    <footer class="row">
-        <div class="large-9 columns">
-            <p>統計數據包含合辦選舉，僅供參考；實際投票時間與人數因網路狀況可能有所出入。</p>
+    <div class="three-up row">
+        <div class="pie chart" id="college-pie-chart" data-dimension="college">
+            <svg></svg>
+            <div class="tooltip">
+                <div class="dimension-field">學院</div>
+                <div class="value-field"></div>
+                <div class="percentage-field"></div>
+            </div>
         </div>
-        <div class="large-3 columns">
-            <p class="large-only-text-right">© <a href="https://ntuosc.org">臺灣大學開源社</a></p>
+        <div class="pie chart" id="station-pie-chart" data-dimension="station">
+            <svg></svg>
+            <div class="tooltip">
+                <div class="dimension-field">投票所</div>
+                <div class="value-field"></div>
+                <div class="percentage-field"></div>
+            </div>
         </div>
+        <div class="pie chart" id="standing-pie-chart" data-dimension="standing">
+            <svg></svg>
+            <div class="tooltip">
+                <div class="dimension-field">學制</div>
+                <div class="value-field"></div>
+                <div class="percentage-field"></div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>統計數據包含合辦選舉，僅供參考；實際投票時間與人數因網路狀況可能有所出入。</p>
     </footer>
-    <script>
-        var labels = ["8:30am", "9am", "9:30am", "10am", "10:30am", "11am", "11:30am", "12pm", "12:30pm", "1pm", "1:30pm", "2pm", "2:30pm", "3pm", "3:30pm", "4pm", "4:30pm", "5pm", "5:30pm", "6pm", "6:30pm", "7pm", "7:30pm", "8pm"];
-
-        var raw_data = {
-            '頤賢': [0, 0, 9, 33, 40, 49, 67, 117, 156, 195, 195, 238, 270, 324, 361, 379, 402, 413, 437, 467, 467, 467, 467, 467],
-            '活大': [0, 0, 5, 17, 34, 45, 59, 93, 139, 161, 161, 187, 205, 229, 256, 273, 290, 313, 326, 345, 372, 386, 394, 394],
-            '普通': [0, 0, 11, 34, 35, 59, 61, 106, 126, 146, 146, 166, 186, 221, 243, 252, 264, 275, 299, 313, 313, 313, 313, 313],
-            '大一女': [0, 0, 4, 24, 36, 43, 56, 83, 118, 140, 140, 157, 172, 194, 213, 216, 235, 247, 279, 298, 300, 300, 300, 300],
-            '共同': [0, 0, 2, 21, 26, 34, 38, 64, 88, 98, 98, 120, 127, 157, 168, 190, 208, 225, 237, 244, 244, 244, 244, 244],
-            '男一': [0, 0, 6, 24, 33, 42, 49, 68, 98, 112, 112, 132, 152, 171, 182, 195, 202, 215, 227, 243, 243, 243, 243, 243],
-            '二活': [0, 0, 2, 15, 19, 26, 32, 48, 55, 72, 72, 77, 84, 100, 112, 126, 130, 141, 164, 184, 195, 199, 203, 204],
-            '新生': [0, 0, 3, 26, 29, 33, 37, 70, 93, 102, 102, 109, 116, 142, 147, 150, 157, 169, 178, 182, 182, 182, 182, 182],
-            '醫圖': [0, 0, 9, 15, 19, 22, 27, 27, 36, 47, 47, 49, 51, 72, 94, 107, 107, 119, 126, 127, 127, 127, 127, 127],
-            '水源': [0, 0, 2, 3, 9, 11, 11, 16, 20, 28, 28, 40, 41, 47, 51, 51, 53, 53, 59, 62, 62, 62, 62, 62],
-            '公衛': [0, 0, 2, 3, 5, 5, 5, 10, 16, 22, 22, 22, 24, 28, 28, 28, 32, 33, 39, 43, 43, 43, 43, 43]
-        }
-
-        var context = document.getElementById('chart1').getContext('2d');
-        var chart1 = new Chart(context).Line({ labels: labels, datasets: generate_dataset(raw_data) }, { multiTooltipTemplate: "<%if (datasetLabel) {%><%=datasetLabel%>: <%}%><%= value %>" });
-    </script>
+    <script src="chart.js"></script>
+    <script src="index.js"></script>
     <script>
         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
             (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -73,6 +81,6 @@
         ga('create', 'UA-46787322-2', 'auto');
         ga('send', 'pageview');
     </script>
-    <!-- (C) RSChiang / NTUOSC 2014. https://ntuosc.org -->
+    <!-- (C) RSChiang / NTUOSC 2017. https://ntuosc.org -->
 </body>
 </html>

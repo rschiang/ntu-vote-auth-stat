@@ -1,0 +1,146 @@
+/* Use Google Fonts */
+@import url('https://fonts.googleapis.com/css?family=Lato:400,700|Montserrat:600');
+
+* {
+    box-sizing: border-box;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #fafafa;
+    color: #212121;
+    font-family: Lato, Source Han Sans, sans-serif;
+}
+
+header, footer, .row {
+    max-width: 68em;
+    margin: auto;
+    padding: 0 1em;
+}
+
+header {
+    font-family: Montserrat, Source Han Sans, sans-serif;
+    font-weight: 600;
+}
+
+nav.semesters, nav.dimensions {
+    float: right;
+    text-align: right;
+}
+
+nav .active {
+    color: #212121;
+    text-decoration: none;
+}
+
+.chart.row {
+    padding: 0;
+}
+
+.three-up.row {
+    padding: 0 2em;
+}
+
+.three-up.row .chart {
+    width: 100%;
+    max-width: 34em;
+    margin: 2em auto;
+}
+
+@media screen and (min-width: 68em) {
+    .three-up.row {
+        padding: 0 1em;
+    }
+
+    .three-up.row .chart {
+        width: 29.41%;
+        margin: 2em 2.941%;
+        float: left;
+    }
+
+    .three-up.row .chart:first-child {
+        margin-left: 0;
+    }
+
+    .three-up.row .chart:last-child {
+        margin-right: 0;
+        float: right;
+    }
+
+    .three-up.row:after {
+        content: '';
+        display: block;
+        clear: both;
+    }
+}
+
+.tip {
+    color: #9e9e9e;
+}
+
+svg {
+    width: 100%;
+    height: 100%;
+}
+
+svg text {
+    font-family: Lato, Source Han Sans, sans-serif;
+}
+
+svg .graph .area {
+    transition: stroke 0.07s ease, opacity 0.07s ease;
+}
+
+svg .graph.active .area {
+    opacity: .9;
+}
+
+svg .graph.active .area:hover {
+    opacity: 1;
+    stroke: 1px rgba(0, 0, 0, .33) solid;
+}
+
+svg .graph.disabled .area {
+    opacity: .54;
+}
+
+svg .selector {
+    transition: opacity 0.07s ease;
+    opacity: 0;
+}
+
+svg .selector.visible {
+    opacity: .87;
+}
+
+svg .tooltip text {
+    fill: #9e9e9e;
+    font-size: 12px;
+}
+
+svg .tooltip .value-field {
+    fill: #212121;
+    font-size: 24px;
+}
+
+.pie.chart {
+    position: relative;
+}
+
+.pie.chart .tooltip {
+    position: absolute;
+    top: 50%;
+    left: 20%;
+    width: 60%;
+    line-height: 1.25rem;
+    transform: translateY(-2.75rem);
+    text-align: center;
+}
+
+.pie.chart .value-field {
+    font-size: 2em;
+    line-height: 2.5rem;
+}
