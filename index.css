@@ -133,7 +133,8 @@ svg .tooltip .value-field {
 .pie.chart .tooltip {
     position: absolute;
     top: 50%;
-    width: 100%;
+    left: 20%;
+    width: 60%;
     line-height: 1.25rem;
     transform: translateY(-2.75rem);
     text-align: center;
