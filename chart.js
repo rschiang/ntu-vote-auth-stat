@@ -269,7 +269,7 @@ var PieChart = function(options) {
     var self = {
         width: 296, height: 296,
         radius: 148, innerRadius: 99,
-        enabled: true,
+        enabled: true, duration: 420,
         dimensionKey: options.dimension,
         dimensionName: options.dimensionName
     };
@@ -327,21 +327,33 @@ var PieChart = function(options) {
 
             self.series.sort(function(a, b) { return b.sum - a.sum; });
 
-            self.graphArea.datum(self.series)
-                .selectAll("path")
-                .data(self.pie)
-                .enter()
+            var slice = self.graphArea.selectAll(".area")
+                .data(self.pie(self.series), function(d) { return d.data.key });
+
+            slice.enter()
                 .append("path")
-                .attr("class", "area")
                 .attr("fill", self.colors)
-                .attr("d", self.arc)
-                .each(function(d) { this._currentAngle = d; })
+                .attr("class", "area")
                 .on("mouseover", self.onSeriesMouseOver)
-                .on("mouseleave", self.onSeriesMouseLeave);
+                .on("mouseleave", self.onSeriesMouseLeave)
+
+            slice.transition()
+                .duration(self.duration)
+                .attrTween("d", self.onTweenArc);
+
+            slice.exit()
+                .remove();
 
             self.onSeriesMouseLeave();
         });
     }
+
+    self.onTweenArc = function(d) {
+        this._current = this._current || d;
+        var interpolate = d3.interpolate(this._current, d);
+        this._current = interpolate(0);
+        return function(t) { return self.arc(interpolate(t)) };
+    };
 
     self.onSeriesMouseOver = function(d, i) {
         if (!self.enabled) return;

@@ -103,6 +103,10 @@ svg .graph.active .area:hover {
     stroke: 1px rgba(0, 0, 0, .33) solid;
 }
 
+svg .graph.disabled .area {
+    opacity: .54;
+}
+
 svg .selector {
     transition: opacity 0.07s ease;
     opacity: 0;
