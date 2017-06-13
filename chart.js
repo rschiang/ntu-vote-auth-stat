@@ -434,3 +434,16 @@ var PieChart = function(options) {
 
     return self;
 };
+
+var campusMap = (function() {
+    var self = {};
+
+    self.init = function() {
+        d3.xml("assets/map.svg").mimeType("image/svg+xml").get(function(e, xml) {
+            document.getElementById("chart-map").appendChild(xml.documentElement);
+        });
+    };
+
+    self.init();
+    return self;
+})();
