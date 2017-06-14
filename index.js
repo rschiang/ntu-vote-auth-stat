@@ -158,16 +158,8 @@ var pageState = (function() {
             });
 
         var hasStanding = (dimensions.indexOf("standing") >= 0);
-        if (hasStanding) {
+        if (hasStanding)
             self.pieChart.standing.initData("data/"+self.semester+"/station-standing.csv");
-            stackedChart.initData({
-                filePath: "data/"+self.semester+"/college-standing.csv",
-                column: college.columnKey, series: standing.columnKey,
-                columnSorting: college.sorting, seriesSorting: standing.sorting,
-                columnLabels: college.labels,
-                colors: (function(d) { return standing.coloring(d, self.year); })
-            });
-        }
         self.pieChart.standing.setEnabled(hasStanding);
     };
 
