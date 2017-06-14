@@ -57,7 +57,7 @@ var timeChart = (function() {
 
         var tooltipElement = self.chart.append("g")
             .attr("class", "tooltip")
-            .attr("transform", "translate(20,20)");
+            .attr("transform", "translate("+self.padding.left+","+self.padding.top+")");
 
         self.tooltip.time = tooltipElement.append("text")
             .attr("class", "time-field");
@@ -68,7 +68,7 @@ var timeChart = (function() {
 
         tooltipElement = self.chart.append("g")
             .attr("class", "tooltip")
-            .attr("transform", "translate("+(self.width-20)+",20)");
+            .attr("transform", "translate("+(self.width - self.padding.right)+","+self.padding.top+")");
 
         self.tooltip.series = tooltipElement.append("text")
             .attr("class", "series-field")
@@ -435,6 +435,104 @@ var PieChart = function(options) {
     return self;
 };
 
+var stackedChart = (function() {
+    var self = {
+        width: 960, height: 320,
+        margin: { top: 10, right: 60, bottom: 20, left: 60 },
+        duration: 420
+    };
+
+    self.init = function() {
+        // Create chart elements
+        self.svgElement = d3.select("#stacked-chart svg")
+            .attr("preserveAspectRatio", "xMidYMid meet")
+            .attr("viewBox", "0 0 "+self.width+" "+self.height);
+        self.chart = self.svgElement.append("g")
+            .attr("transform", "translate("+self.margin.left+","+self.margin.top+")");
+        self.graphArea = self.chart.append("g")
+            .attr("class", "graph");
+
+        // Create axis
+        self.width -= self.margin.left + self.margin.right;
+        self.height -= self.margin.top + self.margin.bottom;
+
+        self.x = d3.scaleBand().rangeRound([0, self.width]).padding(.2);
+        self.y = d3.scaleLinear().range([self.height, 0]);
+
+        self.xAxis = d3.axisBottom().scale(self.x);
+        self.yAxis = d3.axisLeft().scale(self.y);
+
+        // Pre-initialize axes
+        self.xAxisElement = self.chart.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0,"+self.height+")");
+
+        self.yAxisElement = self.chart.append("g")
+            .attr("class", "y axis");
+    };
+
+    self.initData = function(meta) {
+        self.stack = d3.stack()
+            .value(function(d, key) { return d[key] || 0; });
+
+        d3.csv(meta.filePath, function(data) {
+            var columns = [];
+            var series = d3.set();
+
+            // Load and normalize required data
+            d3.nest()
+                .key(meta.column)
+                .entries(data)
+                .forEach(function(t) {
+                    var i = { key: t.key, total: 0 };
+                    t.values.forEach(function(d) {
+                        var seriesName = meta.series(d);
+                        var value = +d.count;
+                        i[seriesName] = value;
+                        i.total += value;
+                        series.add(seriesName);
+                    });
+                    columns.push(i);
+                });
+
+            columns.sort(meta.columnSorting);
+            self.columns = columns;
+
+            self.series = series.values();
+            self.series.sort(meta.seriesSorting);
+
+            // This does not require data and could be initialized earlier,
+            // but we splitted them to index.js, so just accept this.
+            self.x.domain(meta.columnLabels);
+            self.y.domain([0, d3.max(self.columns, function(d) { return d.total; })]).nice();
+
+            // Update axes
+            self.xAxisElement.call(self.xAxis);
+            self.yAxisElement.call(self.yAxis);
+
+            // Update stack and draw charts
+            self.stack.keys(self.series);
+            self.graphArea.selectAll(".series")
+                .data(self.stack(self.columns))
+                .enter()
+                .append("g")
+                .attr("class", "series")
+                .attr("fill", meta.colors)
+                .selectAll("rect")
+                .data(function(d) { return d; }) // Inner loop, for each
+                .enter()
+                .append("rect")
+                .attr("x", function(d) { return self.x(d.data.key); })
+                .attr("y", function(d) { return self.y(d[1]); })
+                .attr("width", self.x.bandwidth())
+                .attr("height", function(d) { return self.y(d[0]) - self.y(d[1]); });
+        });
+    };
+
+    self.init();
+    return self;
+})();
+
 var campusMap = (function() {
     var self = {};
 
@@ -442,6 +540,10 @@ var campusMap = (function() {
         d3.xml("assets/map.svg").mimeType("image/svg+xml").get(function(e, xml) {
             document.getElementById("chart-map").appendChild(xml.documentElement);
         });
+    };
+
+    self.initData = function() {
+        // pass
     };
 
     self.init();
