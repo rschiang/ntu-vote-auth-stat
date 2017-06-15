@@ -473,6 +473,9 @@ var CampusMap = function(options) {
     self.dimensionKey = options.dimension;
     self.totalFunction = function(d) { return d.total; };
 
+    self.loaded = false;
+    self.deferredDataOption = null;
+
     self.init = function() {
         d3.xml("assets/map.svg").mimeType("image/svg+xml").get(function(e, xml) {
             // Load SVG map
@@ -527,10 +530,22 @@ var CampusMap = function(options) {
                 .attr("class", "series-field")
                 .attr("text-anchor", "end")
                 .attr("y", 47);
+
+            self.loaded = true;
+            if (self.deferredDataOption) {
+                self.initData(self.deferredDataOption);
+                self.deferredDataOption = null;
+            }
         });
     };
 
     self.initData = function(filePath) {
+        // Postpone data initialization if not loaded yet
+        if (!self.loaded) {
+            self.deferredDataOption = filePath;
+            return;
+        }
+
         d3.csv(filePath, function(data) {
             self.data = d3.nest()
                 .key(function(d) { return d.station; })
