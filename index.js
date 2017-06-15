@@ -135,7 +135,8 @@ var pageState = (function() {
 
     self.campusMap = CampusMap({
         colors: function(d) { return college.coloring(d.data); },
-        dimension: college.columnKey
+        dimension: college.columnKey,
+        sorting: college.sorting
     });
 
     self.setSemester = function(semester) {

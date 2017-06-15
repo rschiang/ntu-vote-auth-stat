@@ -145,6 +145,18 @@ svg .tooltip .value-field {
     line-height: 2.5rem;
 }
 
+.campus.map .crust {
+    fill: #bdbdbd;
+    stroke: #424242;
+    stroke-width: 0.8px;
+    opacity: .12;
+    transition: opacity 0.14s ease;
+}
+
+.campus.map .crust:hover {
+    opacity: .25;
+}
+
 footer {
     background: #f5f5f5;
     margin: 1em 0 0;

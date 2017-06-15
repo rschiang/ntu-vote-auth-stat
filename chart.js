@@ -64,7 +64,7 @@ var timeChart = (function() {
 
         self.tooltip.value = tooltipElement.append("text")
             .attr("class", "value-field")
-            .attr("y", "24");
+            .attr("y", "28");
 
         tooltipElement = self.chart.append("g")
             .attr("class", "tooltip")
@@ -467,6 +467,7 @@ var PieChart = function(options) {
 var CampusMap = function(options) {
     var self = PieChartBase(options);
 
+    self.radius = 48;
     self.size = d3.scaleLinear().range([0.25, 1]);
 
     self.dimensionKey = options.dimension;
@@ -474,11 +475,25 @@ var CampusMap = function(options) {
 
     self.init = function() {
         d3.xml("assets/map.svg").mimeType("image/svg+xml").get(function(e, xml) {
-            self.svgElement = d3.select(document.getElementById("chart-map").appendChild(xml.documentElement));
-            self.chart = self.svgElement.select("#graph");
+            // Load SVG map
+            var svgElement = document.getElementById("chart-map")
+                .appendChild(xml.documentElement);
+
+            self.svgElement = d3.select(svgElement)
+                .attr("class", "campus map");
+
+            self.width = self.svgElement.attr("width");
+            self.height = self.svgElement.attr("height");
 
             // Initialize pie root
+            self.chart = self.svgElement.select("#graph");
+            self.stations = [];
+
             self.chart.selectAll(".station")
+                .classed("graph", true)
+                .each(function() {
+                    self.stations.push(this.id);
+                })
                 .append("g")
                 .attr("class", "pie-item")
                 .attr("transform", "scale(.25)")
@@ -486,9 +501,32 @@ var CampusMap = function(options) {
                     this._pie = d3.pie()
                         .value(self.valueFunction)
                         .sort(null);
+                    this._arc = d3.arc().innerRadius(0).outerRadius(self.radius);
+                })
+                .append("circle")
+                .attr("class", "crust")
+                .attr("r", self.radius);
 
-                    this._arc = d3.arc().innerRadius(0).outerRadius(48);
-                });
+            // Create tooltips
+            self.tooltip = {};
+
+            var tooltipElement = self.chart.append("g")
+                .attr("class", "tooltip")
+                .attr("transform", "translate("+(self.width-30)+",60)");;
+
+            self.tooltip.dimension = tooltipElement.append("text")
+                .attr("class", "dimension-field")
+                .attr("text-anchor", "end");
+
+            self.tooltip.value = tooltipElement.append("text")
+                .attr("class", "value-field")
+                .attr("text-anchor", "end")
+                .attr("y", "28");
+
+            self.tooltip.percentage = tooltipElement.append("text")
+                .attr("class", "series-field")
+                .attr("text-anchor", "end")
+                .attr("y", 47);
         });
     };
 
@@ -499,6 +537,7 @@ var CampusMap = function(options) {
                 .sortValues(self.sorting)
                 .entries(data);
 
+            var newStations = [];
             self.data.forEach(function(t) {
                 t.total = 0;
                 t.values.forEach(function(e) {
@@ -506,7 +545,15 @@ var CampusMap = function(options) {
                     e.key = self.dimensionKey(e);
                     t.total += e.count;
                 });
+                newStations.push(t.key);
             });
+
+            // Create stub for non-populated stations
+            self.stations
+                .filter(function(s) { return newStations.indexOf(s) < 0; })
+                .forEach(function(s) {
+                    self.data.push({ key: s, total: 0, exists: false, values: [] })
+                });
 
             self.size.domain([d3.min(self.data, self.totalFunction), d3.max(self.data, self.totalFunction)]);
 
@@ -529,6 +576,29 @@ var CampusMap = function(options) {
                 self.transformPie(oldSeries, series, root, rootNode._pie, rootNode._arc);
             });
         });
+    };
+
+    self.onCreateSlice = function(slices) {
+        slices
+            .on("mouseover", self.onSeriesMouseOver)
+            .on("mouseleave", self.onSeriesMouseLeave);
+    };
+
+    self.onSeriesMouseOver = function(d, i) {
+        var pieElement = self.chart.select("#"+d.data.station);
+        pieElement.classed("active", true);
+
+        var data = pieElement.select(".pie-item").datum();
+        self.tooltip.dimension.text(d.data.key);
+        self.tooltip.value.text(d.value);
+        self.tooltip.percentage.text("佔" + d.data.station + " " + self.percentageFormatter(d.value / data.total));
+    };
+
+    self.onSeriesMouseLeave = function() {
+        self.chart.selectAll(".station")
+            .classed("active", false);
+        self.chart.selectAll(".tooltip text")
+            .text("");
     };
 
     self.init();
