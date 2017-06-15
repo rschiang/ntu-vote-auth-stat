@@ -191,7 +191,7 @@ var timeChart = (function() {
             // Find nearest item to display
             if (Math.abs(item.time - invertedx) <= 450000) {
                 // Make all tooltip fields visible
-                d3.selectAll(".tooltip")
+                self.chart.selectAll(".tooltip")
                     .attr("visibility", "visible");
 
                 // Fill tooltips wirh values
@@ -210,7 +210,7 @@ var timeChart = (function() {
         // Restore visual effects
         self.graphArea.attr("class", "graph");
 
-        d3.selectAll(".tooltip")
+        self.chart.selectAll(".tooltip")
             .attr("visibility", "hidden");
 
         self.selector.attr("class", "selector");
