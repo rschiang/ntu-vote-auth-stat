@@ -479,9 +479,12 @@ var CampusMap = function(options) {
     self.init = function() {
         d3.xml("assets/map.svg").mimeType("image/svg+xml").get(function(e, xml) {
             // Load SVG map
-            var svgElement = document.getElementById("chart-map")
-                .appendChild(xml.documentElement);
+            var parent = document.getElementById("chart-map");
+            d3.select(parent)
+                .selectAll(".loading.tip")
+                .remove();
 
+            var svgElement = parent.appendChild(xml.documentElement);
             self.svgElement = d3.select(svgElement)
                 .attr("class", "campus map");
 
