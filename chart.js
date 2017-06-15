@@ -265,14 +265,111 @@ var timeChart = (function() {
     return self;
 })();
 
-var PieChart = function(options) {
+var PieChartBase = function(options) {
     var self = {
-        width: 296, height: 296,
-        radius: 148, innerRadius: 99,
-        enabled: true, duration: 420,
-        dimensionKey: options.dimension,
-        dimensionName: options.dimensionName
+        duration: 420
     };
+
+    self.percentageFormatter = d3.format(".1%");
+    self.keyFunction = function(d) { return d.data.key };
+    self.valueFunction = function(d) { return d.count; };
+
+    self.defaultColors = function(d, i) {
+        return d3.interpolatePlasma(1 - i / self.getSeriesLength());
+    };
+
+    self.colors = options.colors || self.defaultColors;
+
+    self.defaultSorting = function(a, b) {
+        return b.count - a.count;
+    };
+
+    self.sorting = options.sorting || self.defaultSorting;
+
+    self.migrateSets = function(first, second) {
+        var secondSet = d3.set();
+        second.forEach(function(d) { secondSet.add(d.key); });
+
+        var onlyFirst = first.filter(function(d) { return !secondSet.has(d.key); })
+            .map(function(d) { return { key: d.key, count: 0 }; });
+
+        var merged = d3.merge([ second, onlyFirst ]);
+        merged.sort(self.sorting);
+
+        return merged;
+    };
+
+    self.transformPie = function(fromSeries, toSeries, graph, pie, arc) {
+        var was = self.migrateSets(toSeries, fromSeries);
+        var is = self.migrateSets(fromSeries, toSeries);
+
+        // Load series with old values first
+        var slice = graph.selectAll(".area")
+            .data(pie(was), self.keyFunction);
+
+        var createdSlices = slice.enter()
+            .append("path")
+            .attr("class", "area")
+            .attr("fill", self.colors)
+            .each(function(d) { this._current = d; });
+
+        self.onCreateSlice(createdSlices);
+
+        // Now load the new values
+        slice = graph.selectAll(".area")
+            .data(pie(is), self.keyFunction);
+
+        slice.transition()
+            .duration(self.duration)
+            .attr("fill", self.colors)
+            .attrTween("d", function(d) { /* onTweenArc */
+                var interpolate = d3.interpolate(this._current, d);
+                var _this = this;
+                return function(t) {
+                    _this._current = interpolate(t);
+                    return arc(_this._current);
+                };
+            });
+
+        // Replace with final data afterwards
+        slice.data(pie(toSeries), self.keyFunction);
+
+        slice.exit()
+            .transition()
+            .delay(self.duration)
+            .duration(0)
+            .remove();
+    };
+
+    // Abstract functions and fields
+    self.pie = null;
+    self.arc = null;
+    self.onCreateSlice = function(slices) { /* STUB */ };
+    self.getSeriesLength = function() { return 0; };
+
+    return self;
+};
+
+var PieChart = function(options) {
+    var self = PieChartBase(options);
+
+    // Initialize after inheritance
+    self.width = 296;
+    self.height = 296;
+    self.radius = 148;
+    self.innerRadius = 99;
+    self.enabled = true;
+
+    self.pie = d3.pie()
+        .value(self.valueFunction)
+        .sort(null);
+
+    self.arc = d3.arc()
+        .innerRadius(self.innerRadius)
+        .outerRadius(self.radius);
+
+    self.dimensionKey = options.dimension;
+    self.dimensionName = options.dimensionName;
 
     self.chart = d3.select(options.selector);
 
@@ -291,30 +388,6 @@ var PieChart = function(options) {
         value: self.tooltipElement.select(".value-field"),
         percentage: self.tooltipElement.select(".percentage-field")
     };
-
-    self.percentageFormatter = d3.format(".1%");
-    self.keyFunction = function(d) { return d.data.key };
-    self.valueFunction = function(d) { return d.count; };
-
-    self.pie = d3.pie()
-        .value(self.valueFunction)
-        .sort(null);
-
-    self.arc = d3.arc()
-        .innerRadius(self.innerRadius)
-        .outerRadius(self.radius);
-
-    self.defaultColors = function(d, i) {
-        return d3.interpolatePlasma(1 - i / (self.series.length));
-    };
-
-    self.colors = options.colors || self.defaultColors;
-
-    self.defaultSorting = function(a, b) {
-        return b.count - a.count;
-    };
-
-    self.sorting = options.sorting || self.defaultSorting;
 
     self.initData = function(filePath) {
         d3.csv(filePath, function(data) {
@@ -345,63 +418,19 @@ var PieChart = function(options) {
             self.series = series;
             self.total = total;
 
-            var was = self.migrateSets(series, oldSeries);
-            var is = self.migrateSets(oldSeries, series);
-
-            // Load series with old values first
-            var slice = self.graphArea.selectAll(".area")
-                .data(self.pie(was), self.keyFunction);
-
-            slice.enter()
-                .append("path")
-                .attr("class", "area")
-                .attr("fill", self.colors)
-                .on("mouseover", self.onSeriesMouseOver)
-                .on("mouseleave", self.onSeriesMouseLeave)
-                .each(function(d) { this._current = d; });
-
-            // Now load the new values
-            slice = self.graphArea.selectAll(".area")
-                .data(self.pie(is), self.keyFunction);
-
-            slice.transition()
-                .duration(self.duration)
-                .attr("fill", self.colors)
-                .attrTween("d", self.onTweenArc);
-
-            // Replace with final data afterwards
-            slice.data(self.pie(self.series), self.keyFunction);
-
-            slice.exit()
-                .transition()
-                .delay(self.duration)
-                .duration(0)
-                .remove();
-
+            self.transformPie(oldSeries, series, self.graphArea, self.pie, self.arc);
             self.onSeriesMouseLeave();
         });
     };
 
-    self.migrateSets = function(first, second) {
-        var secondSet = d3.set();
-        second.forEach(function(d) { secondSet.add(d.key); });
-
-        var onlyFirst = first.filter(function(d) { return !secondSet.has(d.key); })
-            .map(function(d) { return { key: d.key, count: 0 }; });
-
-        var merged = d3.merge([ second, onlyFirst ]);
-        merged.sort(self.sorting);
-
-        return merged;
+    self.onCreateSlice = function(slices) {
+        slices
+            .on("mouseover", self.onSeriesMouseOver)
+            .on("mouseleave", self.onSeriesMouseLeave);
     };
 
-    self.onTweenArc = function(d) {
-        var interpolate = d3.interpolate(this._current, d);
-        var _this = this;
-        return function(t) {
-            _this._current = interpolate(t);
-            return self.arc(_this._current);
-        };
+    self.getSeriesLength = function() {
+        return self.series.length;
     };
 
     self.onSeriesMouseOver = function(d, i) {
@@ -435,15 +464,73 @@ var PieChart = function(options) {
     return self;
 };
 
-var campusMap = (function() {
-    var self = {};
+var CampusMap = function(options) {
+    var self = PieChartBase(options);
+
+    self.size = d3.scaleLinear().range([0.25, 1]);
+
+    self.dimensionKey = options.dimension;
+    self.totalFunction = function(d) { return d.total; };
 
     self.init = function() {
         d3.xml("assets/map.svg").mimeType("image/svg+xml").get(function(e, xml) {
-            document.getElementById("chart-map").appendChild(xml.documentElement);
+            self.svgElement = d3.select(document.getElementById("chart-map").appendChild(xml.documentElement));
+            self.chart = self.svgElement.select("#graph");
+
+            // Initialize pie root
+            self.chart.selectAll(".station")
+                .append("g")
+                .attr("class", "pie-item")
+                .attr("transform", "scale(.25)")
+                .each(function() {
+                    this._pie = d3.pie()
+                        .value(self.valueFunction)
+                        .sort(null);
+
+                    this._arc = d3.arc().innerRadius(0).outerRadius(48);
+                });
+        });
+    };
+
+    self.initData = function(filePath) {
+        d3.csv(filePath, function(data) {
+            self.data = d3.nest()
+                .key(function(d) { return d.station; })
+                .sortValues(self.sorting)
+                .entries(data);
+
+            self.data.forEach(function(t) {
+                t.total = 0;
+                t.values.forEach(function(e) {
+                    e.count = +e.count;
+                    e.key = self.dimensionKey(e);
+                    t.total += e.count;
+                });
+            });
+
+            self.size.domain([d3.min(self.data, self.totalFunction), d3.max(self.data, self.totalFunction)]);
+
+            self.data.forEach(function(t) {
+                var root = self.chart.select("#"+t.key+" .pie-item")
+                    .datum(t);
+
+                root.transition()
+                    .duration(self.duration)
+                    .attr("transform", "scale("+self.size(t.total)+")");
+
+                var series = t.values;
+                var oldSeries = root.selectAll(".area")
+                    .data().map(function(d) { return d.data; });
+
+                if (oldSeries.length == 0)
+                    oldSeries = series;
+
+                var rootNode = root.node();
+                self.transformPie(oldSeries, series, root, rootNode._pie, rootNode._arc);
+            });
         });
     };
 
     self.init();
     return self;
-})();
+};

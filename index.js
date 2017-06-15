@@ -131,7 +131,12 @@ var pageState = (function() {
             colors: (function(d) { return standing.coloring(d.data, self.year); }),
             sorting: standing.sorting
         }),
-    }
+    };
+
+    self.campusMap = CampusMap({
+        colors: function(d) { return college.coloring(d.data); },
+        dimension: college.columnKey
+    });
 
     self.setSemester = function(semester) {
         self.semester = semester;
@@ -150,6 +155,7 @@ var pageState = (function() {
         self.showData();
         self.pieChart.college.initData("data/"+self.semester+"/station-college.csv");
         self.pieChart.station.initData("data/"+self.semester+"/station-college.csv");
+        self.campusMap.initData("data/"+self.semester+"/station-college.csv");
         d3.selectAll(".pie.chart")
             .datum(function() { return this.dataset; })
             .on("click", function(d) {
@@ -164,8 +170,6 @@ var pageState = (function() {
     };
 
     self.setDimension = function(dimension) {
-
-
         self.dimension = dimension;
         self.updateActiveLinks();
         self.showData();
