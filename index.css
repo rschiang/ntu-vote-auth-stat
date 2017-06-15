@@ -149,11 +149,15 @@ svg .tooltip .value-field {
     fill: #bdbdbd;
     stroke: #424242;
     stroke-width: 0.8px;
-    opacity: .12;
+    opacity: .54;
     transition: opacity 0.14s ease;
 }
 
-.campus.map .crust:hover {
+.campus.map .crust:only-child {
+    opacity: .12;
+}
+
+.campus.map .crust:only-child:hover {
     opacity: .25;
 }
 
