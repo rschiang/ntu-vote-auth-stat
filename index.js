@@ -103,14 +103,20 @@ var meta = {
         endTime: { hour: 20, minute: 0 },
         gap: 15,
         dimensions: ['station', 'college', 'standing']
+    },
+    "106-1": {
+        startTime: { hour: 9, minute: 30 },
+        endTime: { hour: 18, minute: 0 },
+        gap: 15,
+        dimensions: ['station', 'college', 'standing']
     }
 };
 
 // Store page states
 var pageState = (function() {
     var self = {
-        year: 105,
-        semester: '105-2',
+        year: 106,
+        semester: '106-1',
         dimension: 'station'
     };
 
@@ -218,11 +224,15 @@ var pageState = (function() {
     d3.selectAll('nav.semesters a')
         .on('click', function() {
             self.setSemester(this.getAttribute('data-semester'));
+            d3.event.preventDefault();
+            return false;
         });
 
     d3.selectAll('nav.dimensions a')
         .on('click', function() {
             self.setDimension(this.getAttribute('data-dimension'));
+            d3.event.preventDefault();
+            return false;
         });
 
     self.setSemester(self.semester);
